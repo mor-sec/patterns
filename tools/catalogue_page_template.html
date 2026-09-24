@@ -1,0 +1,386 @@
+<title>AWS AI Pattern Catalogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,500;87.5,700;87.5,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --ground: #F3F5F4;
+  --surface: #FFFFFF;
+  --surface-2: #E9EDEC;
+  --ink: #17202B;
+  --muted: #56616E;
+  --rule: #D5DBDA;
+  --accent: #2447A8;
+  --accent-soft: #DCE3F6;
+  --fit: #2E7A4C;
+  --fit-soft: #DDEFE3;
+  --stretch: #9A6300;
+  --stretch-soft: #F6EAD2;
+  --out: #8A929B;
+  --out-soft: #ECEEEF;
+  --seg-off: #DDE2E1;
+  --shadow: 0 1px 2px rgba(23, 32, 43, .06), 0 2px 8px rgba(23, 32, 43, .05);
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #10151C; --surface: #171E27; --surface-2: #1F2833; --ink: #E4E8ED; --muted: #9AA5B2;
+    --rule: #2C3642; --accent: #93AAF2; --accent-soft: #22305A; --fit: #7FCB9B; --fit-soft: #183526;
+    --stretch: #E3B259; --stretch-soft: #3A2D12; --out: #6F7985; --out-soft: #1C232C; --seg-off: #2B3440;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #10151C; --surface: #171E27; --surface-2: #1F2833; --ink: #E4E8ED; --muted: #9AA5B2;
+  --rule: #2C3642; --accent: #93AAF2; --accent-soft: #22305A; --fit: #7FCB9B; --fit-soft: #183526;
+  --stretch: #E3B259; --stretch-soft: #3A2D12; --out: #6F7985; --out-soft: #1C232C; --seg-off: #2B3440;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+body { background: var(--ground); color: var(--ink); font: 15px/1.6 var(--body); padding-inline: 16px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+code { font-family: var(--mono); font-size: .88em; background: var(--surface-2); padding: .05em .3em; border-radius: 3px; }
+.shell { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; padding-block: 28px 80px; }
+@media (min-width: 1100px) { .shell { grid-template-columns: 230px minmax(0, 1fr); } }
+
+/* Contents rail */
+.rail { display: none; }
+@media (min-width: 1100px) {
+  .rail { display: block; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; max-height: calc(100vh - 40px); overflow-y: auto; }
+}
+.rail h2 { font: 700 12px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 0 12px; }
+.rail ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rail a { display: block; color: var(--ink); text-decoration: none; font-size: 13px; padding: 3px 8px; border-radius: 4px; }
+.rail li.sub a { font-size: 12.5px; color: var(--muted); padding-left: 18px; }
+.rail a:hover { background: var(--surface-2); }
+.rail a.active { background: var(--accent-soft); color: var(--accent); }
+
+main { min-width: 0; }
+.masthead { display: grid; gap: 14px; padding-bottom: 26px; border-bottom: 1px solid var(--rule); }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 800 clamp(34px, 5vw, 54px)/1.02 var(--display); font-stretch: 87.5%; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.lede { max-width: 68ch; font-size: 17px; color: var(--ink); margin: 0; }
+.lede-note { max-width: 68ch; color: var(--muted); font-size: 13.5px; margin: 0; }
+.scales { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 6px; }
+.scale-key { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; }
+.scale-key b { font: 600 13px/1.3 var(--mono); color: var(--accent); display: block; }
+.scale-key span { font-size: 12.5px; color: var(--muted); }
+.contents-inline { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; }
+@media (min-width: 1100px) { .contents-inline { display: none; } }
+
+section.block { padding-top: 38px; }
+section.block > h2, .patterns-intro h2 { font: 800 30px/1.1 var(--display); font-stretch: 87.5%; margin: 0 0 6px; text-wrap: balance; }
+.block-intro { color: var(--muted); max-width: 70ch; margin: 0 0 18px; }
+.prose { max-width: 900px; }
+.prose h3 { font: 700 21px/1.2 var(--display); font-stretch: 87.5%; margin: 30px 0 8px; text-wrap: balance; }
+.prose h4 { font: 700 16.5px/1.3 var(--display); margin: 24px 0 6px; }
+.prose h5 { font: 600 14px/1.3 var(--body); margin: 18px 0 4px; }
+.prose p, .prose li { max-width: 72ch; }
+.prose blockquote { margin: 16px 0; padding: 10px 16px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; }
+.prose blockquote p { margin: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--rule); margin: 28px 0; }
+.prose ul li:has(.box) { list-style: none; margin-left: -1.1em; }
+.box { display: inline-block; width: 12px; height: 12px; border: 1.5px solid var(--muted); border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+.repo-ref { border-bottom: 1px dotted var(--muted); cursor: help; }
+.table-wrap { overflow-x: auto; margin: 12px 0 18px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+th { background: var(--surface-2); font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.diagram { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; margin: 12px 0 18px; }
+.diagram pre { margin: 0; font-family: var(--mono); font-size: 12px; }
+
+/* Finder */
+.finder { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; box-shadow: var(--shadow); display: grid; gap: 14px; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.filters label { display: grid; gap: 4px; font: 600 11.5px/1.2 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.filters select { font: 14px var(--body); color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 5px; padding: 7px 8px; width: 100%; }
+.finder-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; justify-content: space-between; }
+.tally { font-size: 14px; display: flex; gap: 14px; flex-wrap: wrap; }
+.tally b { font-family: var(--mono); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+button { font: 500 13.5px var(--body); border: 1px solid var(--rule); background: var(--ground); color: var(--ink); padding: 7px 12px; border-radius: 5px; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+button:hover { border-color: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 8px; margin-right: 6px; border-radius: 1px; vertical-align: 0; }
+.legend .l-on { background: var(--accent); }
+.legend .l-x { background: repeating-linear-gradient(135deg, var(--accent) 0 2px, transparent 2px 4px); border: 1px solid var(--accent); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 16px; }
+.card { display: grid; grid-template-rows: auto auto 1fr auto auto auto; gap: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 14px 12px; color: var(--ink); text-decoration: none; box-shadow: var(--shadow); transition: opacity .2s, border-color .2s; }
+.card:hover { border-color: var(--accent); }
+.card.state-out { opacity: .55; box-shadow: none; }
+.card.state-fit { border-color: var(--fit); }
+.card.state-stretch { border-color: var(--stretch); }
+.card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pid { font: 600 13px/1 var(--mono); color: var(--accent); background: var(--accent-soft); padding: 4px 7px; border-radius: 4px; }
+.badge { font: 600 11px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 4px 7px; border-radius: 99px; }
+.badge.fit { color: var(--fit); background: var(--fit-soft); }
+.badge.stretch { color: var(--stretch); background: var(--stretch-soft); }
+.badge.out { color: var(--out); background: var(--out-soft); }
+.card h3 { font: 700 18px/1.2 var(--display); font-stretch: 87.5%; margin: 0; text-wrap: balance; }
+.card .sum { font-size: 13px; color: var(--muted); margin: 0; }
+.strips { display: grid; gap: 5px; }
+.strip { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 8px; }
+.strip .k { font: 600 11px/1 var(--mono); color: var(--muted); }
+.segs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+.seg { font: 500 10px/1 var(--mono); text-align: center; padding: 3px 0; border-radius: 2px; background: var(--seg-off); color: var(--muted); }
+.seg.on { background: var(--accent); color: var(--surface); }
+.seg.x { background: repeating-linear-gradient(135deg, var(--accent-soft) 0 3px, var(--surface) 3px 6px); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.seg.inherit { grid-column: 1 / -1; background: var(--surface-2); color: var(--muted); }
+.plat { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.plat span { border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px; }
+.plat span.none { color: var(--out); }
+.plat b { font-weight: 600; }
+.reasons { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 12.5px; }
+.reasons li { padding-left: 14px; position: relative; }
+.reasons li::before { content: ""; position: absolute; left: 2px; top: .6em; width: 6px; height: 6px; border-radius: 50%; }
+.reasons li.r-out::before { background: var(--out); }
+.reasons li.r-stretch::before { background: var(--stretch); }
+.reasons li.r-fit::before { background: var(--fit); }
+
+/* Pattern articles */
+.pattern { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 20px 22px 16px; margin-top: 18px; }
+@media (max-width: 600px) { .pattern { padding: 16px 14px; } }
+.pattern-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 8px; }
+.pattern-head h3 { font: 800 25px/1.1 var(--display); font-stretch: 87.5%; margin: 0; text-wrap: balance; }
+.pattern-head .pid { font-size: 15px; }
+.pattern .table-wrap { background: var(--ground); }
+.pattern .diagram { background: var(--ground); }
+.back { font-size: 13px; margin: 18px 0 0; }
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 13px; max-width: 80ch; }
+</style>
+
+<div class="shell" id="top">
+  <nav class="rail" aria-label="Contents">
+    <h2>Contents</h2>
+    <ul>
+{{TOC}}
+    </ul>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="eyebrow">Security Architecture Review · reference architectures</div>
+      <h1>AWS AI Pattern Catalogue</h1>
+      <p class="lede">Eleven reference architectures for AI solutions on AWS, with Snowflake for data pipelines and prototyping and Neo4j for knowledge graphs where they earn their place. Each pattern is rated for budget, complexity, service level and suitability, so teams can pick the lightest pattern that meets their targets and reviewers can challenge designs consistently.</p>
+      <p class="lede-note">Cost figures are order-of-magnitude planning ranges, not quotes. Validate with the AWS Pricing Calculator, Snowflake credit tables and Neo4j Aura pricing before committing a budget. Links shown with a dotted underline point to documents in the SAR repository.</p>
+      <div class="scales" aria-label="Rating scales">
+        <div class="scale-key"><b>B1–B4 budget</b><span>&lt;$1k · $1–10k · $10–50k · &gt;$50k run cost per month</span></div>
+        <div class="scale-key"><b>C1–C4 complexity</b><span>From 1–2 generalists on managed services to a dedicated platform team</span></div>
+        <div class="scale-key"><b>SL0–SL3 service level</b><span>Best effort · 99.0% · 99.5–99.9% · ≥99.95% multi-region</span></div>
+        <div class="scale-key"><b>E1–E4 consequence</b><span>Cosmetic · reversible · high impact · legal or irreversible</span></div>
+      </div>
+      <nav class="contents-inline" aria-label="Jump to">
+        <a href="#finder">Finder</a><a href="#choosing">Choosing</a><a href="#glance">At a glance</a><a href="#patterns">Patterns</a><a href="#framework">Framework</a><a href="#foundations">Foundations</a><a href="#scoring">Scoring</a><a href="#checklist">Checklist</a>
+      </nav>
+    </header>
+
+    <section class="block" id="finder">
+      <h2>Pattern finder</h2>
+      <p class="block-intro">Set the problem's constraints. Patterns that meet all of them are marked <b>fits</b>; patterns that need an uplift, extra controls or funded support are marked <b>stretch</b>; the rest are <b>excluded</b>, with the reason. This is a shortlist, not a decision: compare contenders with the scoring method.</p>
+      <div class="finder">
+        <div class="filters">
+          <label for="f-budget">Budget band
+            <select id="f-budget">
+              <option value="0">Any</option><option value="1">B1 · &lt;$1k/month</option><option value="2">B2 · $1–10k</option><option value="3">B3 · $10–50k</option><option value="4">B4 · &gt;$50k</option>
+            </select></label>
+          <label for="f-sl">Service level
+            <select id="f-sl">
+              <option value="-1">Any</option><option value="0">SL0 · best effort</option><option value="1">SL1 · 99.0%</option><option value="2">SL2 · 99.5–99.9%</option><option value="3">SL3 · ≥99.95%</option>
+            </select></label>
+          <label for="f-e">Consequence of error
+            <select id="f-e">
+              <option value="0">Any</option><option value="1">E1 · low</option><option value="2">E2 · moderate</option><option value="3">E3 · high</option><option value="4">E4 · critical</option>
+            </select></label>
+          <label for="f-team">Team capacity
+            <select id="f-team">
+              <option value="0">Any</option><option value="1">C1 · 1–2 generalists</option><option value="2">C2 · small product team</option><option value="3">C3 · plus data/ML support</option><option value="4">C4 · platform/ML team</option>
+            </select></label>
+          <label for="f-shape">Task shape
+            <select id="f-shape">
+              <option value="">Any</option>
+              <option value="single">Single request, self-contained</option>
+              <option value="bulk">Bulk / offline processing</option>
+              <option value="prototype">Prototype on Snowflake data</option>
+              <option value="documents">Answers from documents</option>
+              <option value="multihop">Multi-hop relationships</option>
+              <option value="metrics">Metrics in tables</option>
+              <option value="process">Known multi-step process</option>
+              <option value="openended">Open-ended, multi-system task</option>
+              <option value="prediction">Prediction from labelled history</option>
+            </select></label>
+        </div>
+        <div class="finder-bar">
+          <div class="tally" id="tally" aria-live="polite"></div>
+          <div class="actions">
+            <button type="button" class="primary" id="btn-example">Load worked example</button>
+            <button type="button" id="btn-reset">Clear filters</button>
+          </div>
+        </div>
+        <div class="legend"><span><i class="l-on"></i>Supported as designed</span><span><i class="l-x"></i>With uplift or stated controls</span><span>Budget strip shows the usual range; complexity strip shows the minimum level</span></div>
+      </div>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <section class="block prose" id="choosing">
+      <h2>Choosing a pattern</h2>
+{{CHOOSING}}
+    </section>
+
+    <section class="block prose" id="glance">
+      <h2>Suitability at a glance</h2>
+{{GLANCE}}
+    </section>
+
+    <section class="block" id="patterns">
+      <div class="patterns-intro">
+        <h2>The patterns</h2>
+        <p class="block-intro">Each pattern follows the same outline: summary card, when to use it and when not to, architecture, key decisions, cost profile, service levels, complexity, security review focus and evolution.</p>
+      </div>
+      <div class="prose">
+{{PATTERNS}}
+      </div>
+    </section>
+
+    <section class="block prose" id="framework">
+      <h2>Decision framework</h2>
+{{FRAMEWORK}}
+    </section>
+
+    <section class="block prose" id="foundations">
+      <h2>Shared foundations</h2>
+{{FOUNDATIONS}}
+    </section>
+
+    <section class="block prose" id="scoring">
+      <h2>Scoring method</h2>
+      <p class="block-intro">Stage 2 of the scoring sheet: criteria, anchors and weight profiles, the interpretation rules, and a worked example. The full sheet, its Excel workbook and a pre-filled example workbook are in the SAR repository under <code>templates/</code>.</p>
+{{SCORING}}
+    </section>
+
+    <section class="block prose" id="checklist">
+      <h2>Review checklist</h2>
+{{CHECKLIST}}
+    </section>
+
+    <footer>
+      Part of the Security Architecture Review (SAR) process. Service names, tiers and indicative prices are re-validated every six months; pattern ratings are updated from post-implementation review evidence.
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  const CARDS = {{CARDS_JSON}};
+  const $ = (id) => document.getElementById(id);
+  const F = { budget: $("f-budget"), sl: $("f-sl"), e: $("f-e"), team: $("f-team"), shape: $("f-shape") };
+  const SHAPE_LABEL = {};
+  Array.from(F.shape.options).forEach((o) => { SHAPE_LABEL[o.value] = o.text; });
+
+  function assess(c, f) {
+    const r = [];
+    const add = (kind, text) => r.push({ kind, text });
+    if (f.budget && c.b[0] > f.budget) add("out", "Fixed floor typically needs B" + c.b[0] + " or above");
+    if (f.sl >= 0) {
+      if (c.sl >= f.sl) {}
+      else if (c.slx >= f.sl) add("stretch", (c.notes.sl || "Needs uplift to reach SL" + f.sl));
+      else add("out", "Reaches SL" + c.slx + " at most");
+    }
+    if (f.e) {
+      if (c.e === null) add("stretch", "Inherits the consequence level of the host pattern");
+      else if (c.e >= f.e) {}
+      else if (c.ex >= f.e) add("stretch", c.notes.e || "Needs extra controls for E" + f.e);
+      else add("out", "Supports up to E" + c.ex);
+    }
+    if (f.team) {
+      const d = c.c - f.team;
+      if (d === 1) add("stretch", "Needs C" + c.c + ": one level above the team, so funded support is required");
+      else if (d > 1) add("out", "Needs C" + c.c + ": " + d + " levels above the team's capacity");
+    }
+    if (f.shape) {
+      if (c.shapes.includes(f.shape)) {}
+      else if (c.id === "P10" && ["single", "documents", "openended", "prediction"].includes(f.shape)) add("stretch", "Only when evaluation proves managed models insufficient");
+      else add("out", "Built for a different task shape");
+    }
+    const any = f.budget || f.sl >= 0 || f.e || f.team || f.shape;
+    const state = r.some((x) => x.kind === "out") ? "out" : r.some((x) => x.kind === "stretch") ? "stretch" : any ? "fit" : "none";
+    if (state === "fit") add("fit", "Meets every selected constraint");
+    return { state, reasons: r.filter((x) => state !== "out" || x.kind === "out") };
+  }
+
+  function strip(key, labels, onFn, xFn) {
+    const segs = labels.map((l, i) => {
+      const cls = onFn(i) ? "seg on" : xFn && xFn(i) ? "seg x" : "seg";
+      return '<span class="' + cls + '">' + l + "</span>";
+    }).join("");
+    return '<div class="strip"><span class="k">' + key + '</span><div class="segs">' + segs + "</div></div>";
+  }
+
+  function render() {
+    const f = { budget: +F.budget.value, sl: +F.sl.value, e: +F.e.value, team: +F.team.value, shape: F.shape.value };
+    const order = { fit: 0, stretch: 1, none: 1, out: 2 };
+    const rows = CARDS.map((c) => ({ c, a: assess(c, f) }))
+      .sort((x, y) => order[x.a.state] - order[y.a.state] || x.c.id.localeCompare(y.c.id));
+    const counts = { fit: 0, stretch: 0, out: 0 };
+    rows.forEach((x) => { if (counts[x.a.state] !== undefined) counts[x.a.state]++; });
+    const anyFilter = rows.length && rows[0].a.state !== "none";
+    $("tally").innerHTML = anyFilter
+      ? '<span><b>' + counts.fit + '</b> fit</span><span><b>' + counts.stretch + '</b> stretch</span><span><b>' + counts.out + '</b> excluded</span>'
+      : '<span>Showing all <b>' + CARDS.length + '</b> patterns. Set a constraint to shortlist.</span>';
+    $("cards").innerHTML = rows.map(({ c, a }) => {
+      const badge = a.state === "none" ? "" : '<span class="badge ' + a.state + '">' + (a.state === "out" ? "excluded" : a.state) + "</span>";
+      const eStrip = c.e === null
+        ? '<div class="strip"><span class="k">E</span><div class="segs"><span class="seg inherit">inherits host pattern</span></div></div>'
+        : strip("E", ["E1", "E2", "E3", "E4"], (i) => i + 1 <= c.e, (i) => i + 1 <= c.ex);
+      const plat = (name, role) => '<span class="' + (role === "—" ? "none" : "") + '"><b>' + name + ":</b> " + (role === "—" ? "not used" : role) + "</span>";
+      const reasons = a.reasons.length
+        ? '<ul class="reasons">' + a.reasons.map((x) => '<li class="r-' + x.kind + '">' + x.text + "</li>").join("") + "</ul>"
+        : "";
+      return '<a class="card state-' + a.state + '" href="#' + c.id.toLowerCase() + '">' +
+        '<div class="card-top"><span class="pid">' + c.id + "</span>" + badge + "</div>" +
+        "<h3>" + c.title + "</h3>" +
+        '<p class="sum">' + c.summary + "</p>" +
+        '<div class="strips">' +
+          strip("B", ["B1", "B2", "B3", "B4"], (i) => i + 1 >= c.b[0] && i + 1 <= c.b[1]) +
+          strip("C", ["C1", "C2", "C3", "C4"], (i) => i + 1 === c.c) +
+          strip("SL", ["SL0", "SL1", "SL2", "SL3"], (i) => i <= c.sl, (i) => i <= c.slx) +
+          eStrip +
+        "</div>" +
+        '<div class="plat">' + plat("Snowflake", c.sf) + plat("Neo4j", c.neo) + "</div>" +
+        reasons + "</a>";
+    }).join("");
+  }
+
+  Object.values(F).forEach((el) => el.addEventListener("change", render));
+  $("btn-example").addEventListener("click", () => {
+    F.budget.value = "2"; F.sl.value = "2"; F.e.value = "3"; F.team.value = "2"; F.shape.value = "multihop"; render();
+  });
+  $("btn-reset").addEventListener("click", () => {
+    F.budget.value = "0"; F.sl.value = "-1"; F.e.value = "0"; F.team.value = "0"; F.shape.value = ""; render();
+  });
+  render();
+
+  // Highlight the current section in the contents rail.
+  const links = Array.from(document.querySelectorAll(".rail a"));
+  const targets = links.map((l) => document.getElementById(l.getAttribute("href").slice(1))).filter(Boolean);
+  if ("IntersectionObserver" in window && targets.length) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          links.forEach((l) => l.classList.toggle("active", l.getAttribute("href") === "#" + en.target.id));
+        }
+      });
+    }, { rootMargin: "-10% 0px -80% 0px" });
+    targets.forEach((t) => io.observe(t));
+  }
+})();
+</script>
