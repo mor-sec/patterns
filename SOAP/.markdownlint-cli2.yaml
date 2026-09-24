@@ -1,0 +1,8 @@
+# markdownlint configuration for the SOAP repo, aligned with the AI-DLC Playbook config.
+config:
+  default: true
+  MD013: false   # line length — prose is wrapped by the editor, not by hand
+  MD060: false   # table column style — compact |---| separators are the house style
+  MD033: false   # inline HTML — Mermaid node labels need <br/>
+ignores:
+  - node_modules
