@@ -8,10 +8,10 @@ Run locally over stdio:
     python -m tra_core.mcp_servers reference
     TRA_GIT_ROOT=../examples/artefacts python -m tra_core.mcp_servers artefacts
 
-In production the servers run behind the MCP gateway (AgentCore Gateway or
-Azure API Management), which validates the caller's audience-bound token and
-passes the user's clearance claim. `clearance_of` reads that claim; locally it
-falls back to TRA_LOCAL_CLEARANCE.
+Deployed, they run over streamable HTTP behind `tra_platform.mcp`, which
+validates the caller's delegation token on every request and hands the user's
+clearance to `artefacts_get`. Locally the clearance falls back to
+TRA_LOCAL_CLEARANCE.
 """
 
 from __future__ import annotations
@@ -19,17 +19,28 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any
 
 from mcp.server import MCPServer
+from mcp.server.mcpserver import Context
+from mcp.server.mcpserver.exceptions import ToolError as McpToolError
 from mcp.types import ToolAnnotations
 
 from tra_core.artefacts import ArtefactSource, ConfluenceArtefactSource, GitArtefactSource
 from tra_core.reference import Reference
 from tra_core.schemas import Classification
-from tra_core.tools import ToolSet
+from tra_core.tools import ToolError, ToolSet
 
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+
+
+def _surface(fn: Callable[..., dict[str, Any]], *args: Any) -> dict[str, Any]:
+    """Return a refusal (unknown ID, clearance too low) to the caller as a tool error with its reason."""
+    try:
+        return fn(*args)
+    except ToolError as exc:
+        raise McpToolError(str(exc)) from exc
 
 
 def _local_clearance() -> Classification:
@@ -46,27 +57,30 @@ def build_reference_server(toolset: ToolSet) -> MCPServer:
     @server.tool(annotations=READ_ONLY)
     def threats_search(applies_to: str, tags: list[str] | None = None, include_ai: bool = False) -> dict[str, Any]:
         """Threat library entries for a DFD element kind (external_entity, process, data_store, data_flow, boundary_flow)."""
-        return toolset.threats_search(applies_to, tags, include_ai)
+        return _surface(toolset.threats_search, applies_to, tags, include_ai)
 
     @server.tool(annotations=READ_ONLY)
     def threats_get(threat_id: str) -> dict[str, Any]:
         """One threat library entry by ID (TL-nnn)."""
-        return toolset.threats_get(threat_id)
+        return _surface(toolset.threats_get, threat_id)
 
     @server.tool(annotations=READ_ONLY)
     def controls_lookup(ids: list[str]) -> dict[str, Any]:
         """Common controls by ID (CC-nnn) with ISO 27001, Essential Eight, ISM and PCI DSS references."""
-        return toolset.controls_lookup(ids)
+        return _surface(toolset.controls_lookup, ids)
 
     @server.tool(annotations=READ_ONLY)
     def controls_list(domain: str | None = None) -> dict[str, Any]:
         """List common controls, optionally for one domain."""
-        return toolset.controls_list(domain)
+        return _surface(toolset.controls_list, domain)
 
     return server
 
 
-def build_artefacts_server(toolset: ToolSet) -> MCPServer:
+def build_artefacts_server(
+    toolset: ToolSet, clearance_of_request: Callable[[Context], Classification] | None = None
+) -> MCPServer:
+    """`clearance_of_request` reads the caller's clearance from the authenticated HTTP request."""
     server = MCPServer(
         name="tra-artefacts",
         version="0.1.0",
@@ -74,14 +88,15 @@ def build_artefacts_server(toolset: ToolSet) -> MCPServer:
     )
 
     @server.tool(annotations=READ_ONLY)
-    def artefacts_get(source: str, locator: str) -> dict[str, Any]:
+    def artefacts_get(source: str, locator: str, ctx: Context) -> dict[str, Any]:
         """Fetch one labelled artefact (source: git or confluence)."""
-        return toolset.artefacts_get(source, locator)
+        clearance = clearance_of_request(ctx) if clearance_of_request else None
+        return _surface(toolset.artefacts_get, source, locator, clearance)
 
     @server.tool(annotations=READ_ONLY)
     def artefacts_list(source: str, prefix: str = "") -> dict[str, Any]:
         """List artefact locators under a prefix (a folder, or a Confluence space id)."""
-        return toolset.artefacts_list(source, prefix)
+        return _surface(toolset.artefacts_list, source, prefix)
 
     return server
 

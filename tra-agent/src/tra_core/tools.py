@@ -73,11 +73,12 @@ class ToolSet:
         }
 
     # -- artefacts
-    def artefacts_get(self, source: str, locator: str) -> JSON:
+    def artefacts_get(self, source: str, locator: str, clearance: Classification | None = None) -> JSON:
+        """`clearance` is the caller's, when the transport knows who is calling (the MCP host)."""
         if source not in self.artefacts:
             raise ToolError(f"unknown artefact source {source}")
         artefact = self.artefacts[source].get(locator)
-        if not can_read(self.clearance_of(), artefact.classification):
+        if not can_read(clearance or self.clearance_of(), artefact.classification):
             raise ToolError("caller's clearance is below the artefact's classification")
         return artefact.model_dump(mode="json")
 

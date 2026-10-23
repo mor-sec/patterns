@@ -94,14 +94,21 @@ class BedrockClient:
 class AzureOpenAIClient:
     """Azure OpenAI (Foundry) chat completions with Entra ID auth. Use a regional deployment in Australia East."""
 
-    def __init__(self, endpoint: str, deployment: str, api_version: str = "2024-10-21", client: Any = None):
+    def __init__(
+        self,
+        endpoint: str,
+        deployment: str,
+        api_version: str = "2024-10-21",
+        client: Any = None,
+        credential: Any = None,
+    ):
         self.model_id = deployment
         if client is None:
             from azure.identity import DefaultAzureCredential, get_bearer_token_provider  # optional dependency
             from openai import AsyncAzureOpenAI
 
             token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                credential or DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
             )
             client = AsyncAzureOpenAI(
                 azure_endpoint=endpoint, azure_ad_token_provider=token_provider, api_version=api_version
@@ -208,16 +215,29 @@ class ModelRoute:
 
 
 class ModelRouter:
-    """Which model each agent uses, from config/models.yaml."""
+    """Which model each agent uses, from config/models.yaml.
 
-    def __init__(self, config: dict[str, Any], overrides: dict[str, ModelClient] | None = None) -> None:
+    `bedrock_client` and `azure_credential` let a host on the other cloud supply
+    federated credentials (see `tra_platform.federation`); otherwise each SDK
+    finds its own credentials.
+    """
+
+    def __init__(
+        self,
+        config: dict[str, Any],
+        overrides: dict[str, ModelClient] | None = None,
+        bedrock_client: Any = None,
+        azure_credential: Any = None,
+    ) -> None:
         self.config = config
         self.overrides = overrides or {}
+        self.bedrock_client = bedrock_client
+        self.azure_credential = azure_credential
         self._cache: dict[tuple[str, str], ModelClient] = {}
 
     @classmethod
-    def from_file(cls, path: Path) -> ModelRouter:
-        return cls(yaml.safe_load(path.read_text(encoding="utf-8")))
+    def from_file(cls, path: Path, **kwargs: Any) -> ModelRouter:
+        return cls(yaml.safe_load(path.read_text(encoding="utf-8")), **kwargs)
 
     def route(self, agent: str) -> ModelRoute:
         agents = self.config.get("agents", {})
@@ -236,9 +256,13 @@ class ModelRouter:
         if key not in self._cache:
             p = self.config.get("providers", {}).get(r.provider, {})
             if r.provider == "bedrock":
-                self._cache[key] = BedrockClient(r.model, region=p.get("region", "ap-southeast-2"))
+                self._cache[key] = BedrockClient(
+                    r.model, region=p.get("region", "ap-southeast-2"), client=self.bedrock_client
+                )
             elif r.provider == "azure":
-                self._cache[key] = AzureOpenAIClient(p["endpoint"], r.model, p.get("api_version", "2024-10-21"))
+                self._cache[key] = AzureOpenAIClient(
+                    p["endpoint"], r.model, p.get("api_version", "2024-10-21"), credential=self.azure_credential
+                )
             else:
                 raise ModelError(f"unknown provider {r.provider}")
         return self._cache[key]

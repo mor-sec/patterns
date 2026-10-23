@@ -9,8 +9,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 import threading
+import time
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, Field
@@ -54,7 +57,17 @@ class AuditEvent(BaseModel):
         return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
 
 
+class SequenceTaken(Exception):
+    """Another writer already appended an event with this sequence number."""
+
+
 class AuditSink(Protocol):
+    """Where events land. `append` raises `SequenceTaken` if the sequence number is already used.
+
+    A sink may also offer `tail() -> AuditEvent | None` so a new log can find
+    the head of a long chain without reading all of it.
+    """
+
     def append(self, event: AuditEvent) -> None: ...
     def read_all(self) -> list[AuditEvent]: ...
 
@@ -97,9 +110,28 @@ class AuditLog:
     def __init__(self, sink: AuditSink) -> None:
         self.sink = sink
         self._lock = threading.Lock()
-        existing = sink.read_all()
-        self._seq = existing[-1].seq if existing else 0
-        self._last_hash = existing[-1].hash if existing else GENESIS
+        self._resync()
+
+    def _resync(self) -> None:
+        tail = getattr(self.sink, "tail", None)
+        last = tail() if tail else (self.sink.read_all() or [None])[-1]
+        self._seq = last.seq if last else 0
+        self._last_hash = last.hash if last else GENESIS
+
+    def _append(self, build: Callable[[int, str], AuditEvent]) -> AuditEvent:
+        """Append at the head. If another writer got there first, move to the new head and try again."""
+        for attempt in range(20):
+            event = build(self._seq + 1, self._last_hash)
+            event.hash = event.compute_hash()
+            try:
+                self.sink.append(event)
+            except SequenceTaken:
+                time.sleep(random.uniform(0, 0.005 * (attempt + 1)))  # noqa: S311 - jitter, not crypto
+                self._resync()
+                continue
+            self._seq, self._last_hash = event.seq, event.hash
+            return event
+        raise SequenceTaken("audit chain is too contended to append")
 
     def record(
         self,
@@ -113,23 +145,37 @@ class AuditLog:
         classification: str = "OFFICIAL_SENSITIVE",
     ) -> AuditEvent:
         with self._lock:
-            self._seq += 1
-            event = AuditEvent(
-                seq=self._seq,
-                tra_id=tra_id,
-                tra_version=tra_version,
-                stage=stage,
-                event_type=event_type,
-                actor=actor.subject,
-                on_behalf_of=actor.acting_for,
-                classification=classification,
-                detail=detail or {},
-                prev_hash=self._last_hash,
+            return self._append(
+                lambda seq, prev: AuditEvent(
+                    seq=seq,
+                    tra_id=tra_id,
+                    tra_version=tra_version,
+                    stage=stage,
+                    event_type=event_type,
+                    actor=actor.subject,
+                    on_behalf_of=actor.acting_for,
+                    classification=classification,
+                    detail=detail or {},
+                    prev_hash=prev,
+                )
             )
-            event.hash = event.compute_hash()
-            self.sink.append(event)
-            self._last_hash = event.hash
-            return event
+
+    def ingest(self, events: list[dict[str, Any]], origin: str) -> None:
+        """Append events recorded by a remote specialist, re-chained into this log.
+
+        A specialist host keeps its own short in-memory chain per request and
+        returns it with the result; the orchestrator owns the durable chain.
+        The remote chain is checked first so tampering in transit is caught.
+        """
+        remote = [AuditEvent.model_validate(e) for e in events]
+        if problems := verify(remote):
+            raise ValueError(f"audit events from {origin} failed verification: {problems[:3]}")
+        with self._lock:
+            for r in remote:
+                detail = {**r.detail, "origin": origin, "origin_hash": r.hash}
+                self._append(lambda seq, prev, r=r, detail=detail: r.model_copy(
+                    update={"seq": seq, "prev_hash": prev, "detail": detail}
+                ))
 
     def events_for(self, tra_id: str) -> list[AuditEvent]:
         return [e for e in self.sink.read_all() if e.tra_id == tra_id]
