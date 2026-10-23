@@ -84,7 +84,7 @@ jobs:
       - name: CDK assertions
         working-directory: tra-agent/infra/aws
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements.txt -r requirements-dev.txt
           pytest -q -p no:cacheprovider tests
       - name: Bicep build and lint
         working-directory: tra-agent/infra/azure
