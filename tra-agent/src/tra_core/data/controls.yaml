@@ -1,0 +1,203 @@
+# Common control set and framework crosswalk.
+#
+# One common control (CC-nnn) maps to up to five framework references. Agents
+# may only cite IDs that exist in this file; the controls MCP server enforces it.
+#
+# Framework versions:
+#   iso27001:     ISO/IEC 27001:2022 Annex A
+#   e8:           ASD Essential Eight maturity model, target Maturity Level 2
+#   asd_essentials: successor ASD baseline, expected around Q2 2027 (empty until published)
+#   ism:          ASD ISM control IDs. Deliberately empty: populate from the current
+#                 ISM release and re-check at every ISM update before use.
+#   pci_dss:      PCI DSS v4.0.1 requirements
+#
+# This is a starter crosswalk: have the control owner verify each mapping
+# before TRAs rely on it. Replace this file with the corporate control catalogue when it is available.
+
+meta:
+  version: "2026.10.0"
+  owner: security-architecture
+  review_due: "2027-01-31"
+  e8_target_maturity: 2
+  frameworks:
+    iso27001: "ISO/IEC 27001:2022"
+    e8: "ASD Essential Eight (ML2 target)"
+    asd_essentials: "ASD Essentials (expected Q2 2027)"
+    ism: "ASD ISM (populate from current release)"
+    pci_dss: "PCI DSS v4.0.1"
+
+controls:
+  - id: CC-001
+    title: Phishing-resistant multi-factor authentication for users
+    domain: identity
+    iso27001: ["8.5", "5.17"]
+    e8: ["Multi-factor authentication"]
+    pci_dss: ["8.4.2", "8.5"]
+  - id: CC-002
+    title: Centralised identity provider with joiner, mover and leaver automation
+    domain: identity
+    iso27001: ["5.16", "5.18"]
+    pci_dss: ["7.2", "8.2"]
+  - id: CC-003
+    title: Least-privilege access with periodic review
+    domain: identity
+    iso27001: ["5.15", "5.18", "8.3"]
+    e8: ["Restrict administrative privileges"]
+    pci_dss: ["7.2", "7.3"]
+  - id: CC-004
+    title: Privileged access through just-in-time elevation and separate admin identities
+    domain: identity
+    iso27001: ["8.2"]
+    e8: ["Restrict administrative privileges"]
+    pci_dss: ["7.2", "8.2"]
+  - id: CC-005
+    title: Workload identity federation; no long-lived static credentials
+    domain: identity
+    iso27001: ["5.17", "8.5"]
+    pci_dss: ["8.6"]
+  - id: CC-006
+    title: Audience-bound, short-lived tokens with token exchange between services
+    domain: identity
+    iso27001: ["8.5", "5.15"]
+    pci_dss: ["8.3"]
+  - id: CC-007
+    title: Secrets held in a managed secrets store with rotation
+    domain: data
+    iso27001: ["5.17", "8.24"]
+    pci_dss: ["3.6", "8.6"]
+  - id: CC-008
+    title: Encryption at rest with customer-managed keys
+    domain: data
+    iso27001: ["8.24"]
+    pci_dss: ["3.5.1", "3.6"]
+  - id: CC-009
+    title: TLS 1.2 or higher for all data in transit
+    domain: data
+    iso27001: ["8.24", "5.14"]
+    pci_dss: ["4.2.1"]
+  - id: CC-010
+    title: Data classification labelling and attribute-based access on labels
+    domain: data
+    iso27001: ["5.12", "5.13", "8.3"]
+    pci_dss: ["7.2"]
+  - id: CC-011
+    title: Data loss prevention and egress control
+    domain: data
+    iso27001: ["8.12", "8.20"]
+    pci_dss: ["1.4"]
+  - id: CC-012
+    title: Backups that are isolated, immutable and restore-tested
+    domain: resilience
+    iso27001: ["8.13"]
+    e8: ["Regular backups"]
+  - id: CC-013
+    title: Network segmentation and private connectivity to managed services
+    domain: network
+    iso27001: ["8.20", "8.22"]
+    pci_dss: ["1.2", "1.3", "1.4"]
+  - id: CC-014
+    title: Web application firewall and rate limiting at the edge
+    domain: network
+    iso27001: ["8.20", "8.21"]
+    pci_dss: ["6.4.2"]
+  - id: CC-015
+    title: Security event logging centralised to a tamper-evident store
+    domain: detection
+    iso27001: ["8.15"]
+    pci_dss: ["10.2.1", "10.3", "10.5"]
+  - id: CC-016
+    title: Monitoring and alerting on security events
+    domain: detection
+    iso27001: ["8.16"]
+    pci_dss: ["10.4", "11.5"]
+  - id: CC-017
+    title: Vulnerability management and timely patching of applications
+    domain: hardening
+    iso27001: ["8.8"]
+    e8: ["Patch applications"]
+    pci_dss: ["6.3.3", "11.3"]
+  - id: CC-018
+    title: Timely patching of operating systems and platforms
+    domain: hardening
+    iso27001: ["8.8"]
+    e8: ["Patch operating systems"]
+    pci_dss: ["6.3.3"]
+  - id: CC-019
+    title: Hardened configuration baselines with drift detection
+    domain: hardening
+    iso27001: ["8.9"]
+    e8: ["User application hardening", "Configure Microsoft Office macro settings"]
+    pci_dss: ["2.2"]
+  - id: CC-020
+    title: Application control on endpoints and servers
+    domain: hardening
+    iso27001: ["8.19", "8.7"]
+    e8: ["Application control"]
+    pci_dss: ["5.2"]
+  - id: CC-021
+    title: Secure development lifecycle with code review and security testing
+    domain: delivery
+    iso27001: ["8.25", "8.28", "8.29"]
+    pci_dss: ["6.2", "6.2.4"]
+  - id: CC-022
+    title: Software supply chain integrity (pinned, signed and scanned dependencies)
+    domain: delivery
+    iso27001: ["5.21", "8.28"]
+    pci_dss: ["6.3.2"]
+  - id: CC-023
+    title: Change management with segregation of environments
+    domain: delivery
+    iso27001: ["8.32", "8.31"]
+    pci_dss: ["6.5.1", "6.5.3"]
+  - id: CC-024
+    title: Payment page script integrity and tamper detection
+    domain: application
+    iso27001: ["8.26"]
+    pci_dss: ["6.4.3", "11.6.1"]
+  - id: CC-025
+    title: Input validation and output encoding
+    domain: application
+    iso27001: ["8.26", "8.28"]
+    pci_dss: ["6.2.4"]
+  - id: CC-026
+    title: Cloud service due diligence and shared responsibility record
+    domain: supplier
+    iso27001: ["5.23", "5.19", "5.20"]
+    pci_dss: ["12.8"]
+  - id: CC-027
+    title: Incident response plan, exercised, with evidence handling
+    domain: response
+    iso27001: ["5.24", "5.25", "5.26", "5.27", "5.28"]
+    pci_dss: ["12.10.1"]
+  - id: CC-028
+    title: Model output treated as untrusted and validated against a schema
+    domain: ai
+    iso27001: ["8.26", "8.27"]
+  - id: CC-029
+    title: Untrusted content isolation and prompt-injection guardrails
+    domain: ai
+    iso27001: ["8.26", "8.27"]
+  - id: CC-030
+    title: Agent tools least-privilege, read-only by default, human confirmation for irreversible actions
+    domain: ai
+    iso27001: ["8.2", "8.27"]
+  - id: CC-031
+    title: Model and MCP server allow-list, version pinning and provenance checks
+    domain: ai
+    iso27001: ["5.21", "8.19"]
+  - id: CC-032
+    title: Model invocation logging with identity-linked traces
+    domain: ai
+    iso27001: ["8.15", "8.16"]
+  - id: CC-033
+    title: Evaluation suite with regression gate before model or prompt changes
+    domain: ai
+    iso27001: ["8.29", "8.32"]
+  - id: CC-034
+    title: Model inference kept in Australian regions with no provider training on data
+    domain: ai
+    iso27001: ["5.23", "5.34"]
+  - id: CC-035
+    title: Availability design with redundancy and capacity limits
+    domain: resilience
+    iso27001: ["8.14", "8.6"]
