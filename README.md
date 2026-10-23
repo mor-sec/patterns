@@ -34,6 +34,10 @@ The SAR checks that operational controls **can** work. For example, it checks th
 
 [API solution architecture patterns](api-patterns/README.md) is a catalogue of AWS-native reference architectures for secure, highly available APIs handling OFFICIAL and OFFICIAL-SENSITIVE data: serverless and managed API products, private and service-to-service APIs, containerised APIs, mTLS B2B integration, GraphQL and real-time, asynchronous APIs, user-facing BFFs, legacy facades and multi-region active/active. Each pattern is rated for budget, complexity, service level, authentication assurance and ease of integration.
 
+### TRA agent
+
+[TRA agent](tra-agent/README.md) is a multi-agent service that drafts threat and risk assessments from design artefacts in Git and Confluence, using this repository's risk method and register format. People approve every TRA at three gates. The core runs locally; adapters for AWS Bedrock AgentCore and Microsoft Foundry follow.
+
 ### Templates
 
 - [Intake questionnaire](templates/intake-questionnaire.md): filled in by the delivery team to start a review
