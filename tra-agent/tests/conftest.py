@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -61,4 +61,4 @@ def bob() -> Principal:
 
 @pytest.fixture
 def carol() -> Principal:
-    return Principal.human("carol", Role.RISK_OWNER, strong_auth=True, auth_time=datetime.now(timezone.utc))
+    return Principal.human("carol", Role.RISK_OWNER, strong_auth=True, auth_time=datetime.now(UTC))

@@ -10,7 +10,9 @@ go back to the model with the errors, up to `max_attempts`.
 from __future__ import annotations
 
 import hashlib
+import html
 import json
+import re
 from dataclasses import dataclass
 from importlib import resources
 from typing import Any, ClassVar, Generic, TypeVar
@@ -58,11 +60,20 @@ def prompt_version(name: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()[:12]
 
 
+_ARTEFACT_TAG = re.compile(r"<(\s*/?\s*artefact\b)", re.IGNORECASE)
+
+
 def artefact_block(artefact: Artefact) -> str:
-    """Wrap untrusted artefact text so the model can tell data from instructions."""
-    body = artefact.text.replace("</artefact>", "&lt;/artefact&gt;")
+    """Wrap untrusted artefact text so the model can tell data from instructions.
+
+    Any artefact tag inside the text, opening or closing, in any case or
+    spacing, is escaped: a design document must not be able to end its own
+    block or forge a second one with a different label.
+    """
+    body = _ARTEFACT_TAG.sub(r"&lt;\1", artefact.text)
+    source, locator = html.escape(artefact.source, quote=True), html.escape(artefact.locator, quote=True)
     return (
-        f'<artefact source="{artefact.source}" locator="{artefact.locator}" '
+        f'<artefact source="{source}" locator="{locator}" '
         f'classification="{artefact.classification.value}" sha256="{artefact.sha256[:12]}">\n{body}\n</artefact>'
     )
 

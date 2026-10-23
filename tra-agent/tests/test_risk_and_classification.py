@@ -2,9 +2,8 @@ import pytest
 
 from tra_core.classification import ClassificationError, check_accepted, derived_label
 from tra_core.risk import Rating, adjust_likelihood, impact_floor, rate, tier
-from tra_core.schemas import Classification
+from tra_core.schemas import Classification, Element, ElementType, Stride
 from tra_core.stride import applicable
-from tra_core.schemas import ElementType, Stride, Element
 
 
 @pytest.mark.parametrize(

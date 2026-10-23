@@ -19,7 +19,11 @@ ENV TRA_ENTRY=${ENTRY} \
     PYTHONDONTWRITEBYTECODE=1
 COPY --from=build /install /usr/local
 COPY config /app/config
-RUN useradd --uid 10001 --no-create-home tra
+# pip is not needed at run time, and its vendored copies of urllib3, msgpack and
+# pkg_resources lag the releases the app itself installs. Remove it and ensurepip.
+RUN python -m pip uninstall -y pip \
+ && rm -rf /usr/local/lib/python3.13/ensurepip \
+ && useradd --uid 10001 --no-create-home tra
 USER 10001
 WORKDIR /app
 # 8080 orchestrator and 9000 specialists on AgentCore, 8000 MCP, 8088 Foundry.

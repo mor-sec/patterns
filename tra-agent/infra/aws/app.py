@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import aws_cdk as cdk
-
 from tra_stack import TraAgentStack
 
 app = cdk.App()

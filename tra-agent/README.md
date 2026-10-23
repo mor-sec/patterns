@@ -96,6 +96,17 @@ infra/azure/     Bicep: VNet-injected Foundry, private storage, ACR, MCP in Cont
 
 Every service-to-service call carries a token for exactly one audience, naming the user as subject and the caller as actor, and every container checks it even where the platform already has. Specialists return their audit events with their results and the orchestrator appends them to the one hash chain, which lands in write-once storage. The [build guide](docs/build-guide.md) covers Entra setup, both deployments, and what to verify before production.
 
+## Evaluation and assurance
+
+Every change is gated in CI by the unit, platform and [red-team tests](tests/redteam/README.md), a golden set of five designs scored for threat, element, risk and critique recall, a dependency audit, IaC checks, and an image scan with an SBOM. Images built on main are signed with cosign. Run the golden set yourself with:
+
+```bash
+tra-eval --replay-dir eval/replays          # offline, recorded model output
+tra-eval --models config/models.yaml --repeat 3   # live Bedrock models
+```
+
+[Build guide section 8](docs/build-guide.md#8-evaluation-red-team-tests-and-ci) explains the cases, thresholds and workflows.
+
 ## Reference data
 
 - [threat_library.yaml](src/tra_core/data/threat_library.yaml): 32 threats across identity, data, application, delivery and AI/agents, with ATLAS IDs and links to SAR delivery-lifecycle IDs.
@@ -103,7 +114,8 @@ Every service-to-service call carries a token for exactly one audience, naming t
 
 ## Not done yet
 
-- Golden-set evaluation, adversarial test suite, image build and scanning, and CI gates: step 4.
-- Nothing has been deployed to a live AgentCore or Foundry account from this repo yet; the [build guide](docs/build-guide.md#9-verify-before-production) lists what to confirm on first deployment.
+- Only the payments case has a recording. The other golden cases run against live models; their expectations still need a practitioner's review of a live run.
+- The CI workflows have not yet run on GitHub.
+- Nothing has been deployed to a live AgentCore or Foundry account from this repo yet; the [build guide](docs/build-guide.md#10-verify-before-production) lists what to confirm on first deployment.
 - The Confluence source has not been run against a live site.
 - The portal UI. The CLI stands in for it locally; identity flags on the CLI are for local development only.

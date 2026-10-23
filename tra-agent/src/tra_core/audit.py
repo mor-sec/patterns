@@ -12,8 +12,8 @@ import json
 import random
 import threading
 import time
-from pathlib import Path
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, Field
@@ -55,6 +55,9 @@ class AuditEvent(BaseModel):
     def compute_hash(self) -> str:
         body = self.model_dump(mode="json", exclude={"hash"})
         return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+
+
+REMOTE_EVENT_TYPES = frozenset({"model_call", "tool_call", "agent_output", "validation_failed"})
 
 
 class SequenceTaken(Exception):
@@ -170,6 +173,12 @@ class AuditLog:
         remote = [AuditEvent.model_validate(e) for e in events]
         if problems := verify(remote):
             raise ValueError(f"audit events from {origin} failed verification: {problems[:3]}")
+        # A specialist can only report its own work. Gate decisions, exports and
+        # the like are recorded by the orchestrator, so a compromised specialist
+        # cannot forge an approval into the evidence.
+        for r in remote:
+            if r.event_type not in REMOTE_EVENT_TYPES or r.actor != origin:
+                raise ValueError(f"{origin} may not record {r.event_type!r} events as {r.actor!r}")
         with self._lock:
             for r in remote:
                 detail = {**r.detail, "origin": origin, "origin_hash": r.hash}

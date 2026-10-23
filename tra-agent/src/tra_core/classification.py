@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 
 from tra_core.schemas import Classification
@@ -38,3 +39,22 @@ def derived_label(inputs: Iterable[Classification]) -> Classification:
 
 def can_read(clearance: Classification, label: Classification) -> bool:
     return clearance.rank >= label.rank
+
+
+# A protective marking written as an upper-case banner line ("PROTECTED",
+# "== SECRET//AUSTEO =="), or as the value of a "Classification:" field in any
+# case. Prose such as "data is protected by TLS" is not a marking.
+_BANNER = re.compile(r"^[\s#*_>|=~-]*(TOP SECRET|SECRET|PROTECTED)\b[^a-z\n]*$", re.MULTILINE)
+_FIELD = re.compile(r"^\W*classification\s*:\s*(top secret|secret|protected)\b", re.MULTILINE | re.IGNORECASE)
+_RANK_OF_MARKING = {"PROTECTED": 3, "SECRET": 4, "TOP SECRET": 5}
+
+
+def marking_conflict(text: str, label: Classification) -> str | None:
+    """The highest banner marking in `text` above `label`, if any.
+
+    Catches a document labelled OFFICIAL: Sensitive whose body is marked
+    PROTECTED or higher: mislabelled material must be refused, not processed.
+    """
+    found = [m.group(1).upper() for rx in (_BANNER, _FIELD) for m in rx.finditer(text)]
+    above = [f for f in found if _RANK_OF_MARKING[f] > label.rank]
+    return max(above, key=_RANK_OF_MARKING.__getitem__) if above else None

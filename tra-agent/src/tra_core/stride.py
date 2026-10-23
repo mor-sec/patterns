@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from tra_core.schemas import DataFlow, Element, ElementType, Stride
 
-S, T, R, I, D, E = Stride.S, Stride.T, Stride.R, Stride.I, Stride.D, Stride.E
+S, T, R, I, D, E = Stride.S, Stride.T, Stride.R, Stride.I, Stride.D, Stride.E  # noqa: E741 (STRIDE letters)
 
 APPLICABLE: dict[str, set[Stride]] = {
     ElementType.EXTERNAL_ENTITY.value: {S, R},
