@@ -36,7 +36,7 @@ The SAR checks that operational controls **can** work. For example, it checks th
 
 ### TRA agent
 
-[TRA agent](tra-agent/README.md) is a multi-agent service that drafts threat and risk assessments from design artefacts in Git and Confluence, using this repository's risk method and register format. People approve every TRA at three gates. The core runs locally; adapters for AWS Bedrock AgentCore and Microsoft Foundry follow.
+[TRA agent](tra-agent/README.md) is a multi-agent service that drafts threat and risk assessments from design artefacts in Git and Confluence, using this repository's risk method and register format. People approve every TRA at three gates. The core runs locally, and the same code deploys to AWS Bedrock AgentCore (Sydney) or Microsoft Foundry (Australia East) with the included CDK and Bicep.
 
 ### Templates
 

@@ -61,21 +61,36 @@ class LocalInvoker:
         self.blob_dir = blob_dir
 
     async def invoke(self, request: SpecialistRequest, on_behalf_of: Principal) -> dict[str, Any]:
-        cls = SPECIALISTS[request.agent]
-        actor = Principal.workload(f"agent:{request.agent}").for_user(on_behalf_of)
-        model = AuditedModelClient(
-            self.router.client_for(request.agent),
-            self.audit,
-            actor,
-            lambda: (request.tra_id, request.tra_version, request.stage),
-            prompt_version(request.agent),
-            self.blob_dir,
+        return await run_specialist(
+            request, on_behalf_of, self.router, self.tools, self.audit, self.reference, self.blob_dir
         )
-        tools = AuditedToolClient(self.tools, self.audit, actor, request.tra_id, request.tra_version)
-        tools.stage = request.stage
-        deps = AgentDeps(model=model, tools=tools, audit=self.audit, actor=actor)
-        agent = cls(deps, self.reference) if request.agent in NEEDS_REFERENCE else cls(deps)  # type: ignore[call-arg]
-        return await agent.handle(request)
+
+
+async def run_specialist(
+    request: SpecialistRequest,
+    on_behalf_of: Principal,
+    router: ModelRouter,
+    tools: ToolClient,
+    audit: AuditLog,
+    reference: Reference,
+    blob_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Run one specialist for one request. Shared by the local invoker and the platform hosts."""
+    cls = SPECIALISTS[request.agent]
+    actor = Principal.workload(f"agent:{request.agent}").for_user(on_behalf_of)
+    model = AuditedModelClient(
+        router.client_for(request.agent),
+        audit,
+        actor,
+        lambda: (request.tra_id, request.tra_version, request.stage),
+        prompt_version(request.agent),
+        blob_dir,
+    )
+    audited_tools = AuditedToolClient(tools, audit, actor, request.tra_id, request.tra_version)
+    audited_tools.stage = request.stage
+    deps = AgentDeps(model=model, tools=audited_tools, audit=audit, actor=actor)
+    agent = cls(deps, reference) if request.agent in NEEDS_REFERENCE else cls(deps)  # type: ignore[call-arg]
+    return await agent.handle(request)
 
 
 class Orchestrator:

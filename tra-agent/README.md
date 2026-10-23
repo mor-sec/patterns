@@ -10,7 +10,7 @@ The agent drafts; people decide. Every TRA stops at three human gates, and only 
 | G2 | Evaluation | Practitioner | As G1; Tier 1 needs two different practitioners on the same TRA version |
 | G3 | Acceptance | Risk owner | As G1, plus phishing-resistant MFA within the last 10 minutes |
 
-This package is the core only. It runs on a workstation today; the AgentCore and Foundry adapters (step 3 of the build plan) wrap the same code for deployment.
+The core (`tra_core`) runs on a workstation. The platform adapters (`tra_platform`) run the same code on Amazon Bedrock AgentCore in Sydney or Microsoft Foundry in Australia East: see the [build guide](docs/build-guide.md).
 
 ## Quick start (offline, no cloud account)
 
@@ -75,7 +75,26 @@ Design choices worth knowing:
 - **Models never produce ratings.** They propose likelihood and impact with a rationale and citations; code computes the rating, applies the classification impact floor and checks that residual is not above inherent.
 - **Artefacts are untrusted.** Their text is wrapped in `<artefact>` tags with an instruction never to follow it, and must carry a PSPF label to be read at all.
 - **Invalid output is retried, then fails.** Schema and domain errors go back to the model up to three times; after that the stage fails rather than passing on bad data.
-- **Specialists are A2A-ready.** Each takes a JSON `SpecialistRequest` and returns JSON, so the platform adapters can host them behind A2A endpoints without code changes.
+- **Specialists are A2A-ready.** Each takes a JSON `SpecialistRequest` and returns JSON, so the platform adapters host them behind A2A (AgentCore) or Invocations (Foundry) endpoints without code changes.
+
+## Deploying: AgentCore and Foundry
+
+```
+tra_platform/
+  auth.py        token validation, claims to Principal, delegation tokens (RFC 8693, Entra OBO)
+  host.py        SpecialistHost (in the specialist) and RemoteInvoker (in the orchestrator)
+  a2a.py         A2A v1.0 JSON-RPC server per specialist, and the A2A client transport
+  mcp.py         MCP servers over streamable HTTP with per-user clearance; routed MCP client
+  service.py     the orchestrator as a JSON service: create, decide, get, report
+  storage.py     S3, Azure Blob and local backends; write-once audit objects
+  federation.py  AWS to Entra and Entra to AWS workload federation (no stored secrets)
+  agentcore.py   AgentCore Runtime entrypoints (HTTP, A2A, MCP)
+  foundry.py     Foundry hosted-agent entrypoints (Invocations) and transport
+infra/aws/       CDK stack: VPC, KMS, S3 with Object Lock, nine AgentCore runtimes
+infra/azure/     Bicep: VNet-injected Foundry, private storage, ACR, MCP in Container Apps; agent deploy script
+```
+
+Every service-to-service call carries a token for exactly one audience, naming the user as subject and the caller as actor, and every container checks it even where the platform already has. Specialists return their audit events with their results and the orchestrator appends them to the one hash chain, which lands in write-once storage. The [build guide](docs/build-guide.md) covers Entra setup, both deployments, and what to verify before production.
 
 ## Reference data
 
@@ -84,7 +103,7 @@ Design choices worth knowing:
 
 ## Not done yet
 
-- Platform adapters (AgentCore Runtime and Gateway, Foundry hosted agents), A2A hosting, IaC and the build guide: step 3.
-- Golden-set evaluation, adversarial test suite and CI gates: step 4.
+- Golden-set evaluation, adversarial test suite, image build and scanning, and CI gates: step 4.
+- Nothing has been deployed to a live AgentCore or Foundry account from this repo yet; the [build guide](docs/build-guide.md#9-verify-before-production) lists what to confirm on first deployment.
 - The Confluence source has not been run against a live site.
 - The portal UI. The CLI stands in for it locally; identity flags on the CLI are for local development only.
