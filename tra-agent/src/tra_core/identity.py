@@ -7,7 +7,7 @@ acting for a human (from an exchanged token whose `act` claim names the agent).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from tra_core.schemas import Classification
@@ -60,4 +60,4 @@ class Principal:
     def auth_age_seconds(self, now: datetime | None = None) -> float | None:
         if self.auth_time is None:
             return None
-        return ((now or datetime.now(timezone.utc)) - self.auth_time).total_seconds()
+        return ((now or datetime.now(UTC)) - self.auth_time).total_seconds()

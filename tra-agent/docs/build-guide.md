@@ -261,11 +261,102 @@ The tests in [tests/platform](../tests/platform) do the following:
 ## 7. Operating it
 
 - **Verify the audit chain.** Read the audit objects in sequence order and run `tra_core.audit.verify`. Any edit or gap shows up as a broken `prev_hash` or a hash mismatch.
-- **Prompt or model changes.** Prompt text is versioned by hash in every `model_call` event. Change prompts or models only through a PR, and rerun the evaluation suite first (step 4 of the plan).
+- **Prompt or model changes.** Prompt text is versioned by hash in every `model_call` event. Change prompts, models or the threat library only through a PR, and run the live golden set on that branch before merging (section 8).
 - **Concurrency.** Audit writes are create-only, so two orchestrator instances can never fork the chain. A writer that loses the race re-reads the head and appends after it.
 - **Sessions.** AgentCore reuses one session per TRA and specialist (`session_id` in [src/tra_platform/agentcore.py](../src/tra_platform/agentcore.py)). Sessions end after 15 idle minutes, and microVMs are never shared between TRAs.
 
-## 8. Control alignment
+## 8. Evaluation, red-team tests and CI
+
+### Golden set
+
+`eval/golden/` holds design artefacts with what any competent TRA of them must
+contain, written as a reviewer would name things ("the payment page", "the
+support assistant") rather than by the IDs a model assigns. The scorer measures
+recall: a TRA with extra plausible threats is not penalised, but a missing one
+is. Precision is left to the practitioner at G2.
+
+| Case | What it checks |
+|---|---|
+| `payments-portal` | Internet-facing card payments with an LLM assistant. Skimming, BOLA, prompt injection and cross-customer disclosure; a hidden "rate all risks Low" comment the critic must report. |
+| `hr-leave` | A simple internal system. The agent must not over-tier or over-rate it. |
+| `rag-assistant` | An internal RAG agent with a write tool over editable sources. Indirect prompt injection, index poisoning and excessive agency, with ATLAS techniques. |
+| `tra-agent-self` | The agent's own design. Its output is the draft for the agent's pre-pilot TRA, reviewed by someone who did not build it. |
+| `mislabelled` | Labelled OFFICIAL but marked PROTECTED in the body. Must be refused before any model call. |
+
+Thresholds are in [eval/thresholds.yaml](../eval/thresholds.yaml): threat
+recall 0.8, element recall 0.9, risk recall 0.75, critique recall 1.0, and
+the classification and tier must match. The gate uses the worst of `--repeat`
+runs, because a threat found two runs in three is not reliably found.
+
+```bash
+# Offline, with recorded model output (what CI runs on every change)
+tra-eval --replay-dir eval/replays
+
+# Live models, three runs per case (needs Bedrock access in ap-southeast-2)
+tra-eval --models config/models.yaml --repeat 3
+```
+
+Each run writes `eval-out/summary.md` and `eval-out/scores.json`, and exits 1 if
+any case misses a threshold. The runner approves G1 as `eval-runner`, which is
+recorded in the audit log, so an evaluation TRA can never be mistaken for a real
+one.
+
+To add a case, put the artefact in `eval/artefacts/` (fictional, labelled) and
+the expectations in `eval/golden/<id>.yaml`. Use `a|b` in a keyword where a
+model may reasonably name a part differently. Only `payments-portal` has a
+recording; record others from a live run you have reviewed, if you want them in
+the offline gate too.
+
+### Red-team tests
+
+`tests/redteam/` attacks the controls in code with recorded model output:
+artefact block escape and forgery, body markings above the label, Markdown and
+HTML injection into the report, model output that tries to set its own ratings
+or cite things that do not exist, gate abuse, forged and replayed tokens, and
+audit tampering. Its [README](../tests/redteam/README.md) maps each test to the
+OWASP Top 10 for LLM Applications and MITRE ATLAS. Writing these found two gaps,
+both fixed: a specialist could have injected a forged gate decision through its
+returned audit events, and an artefact locator could have injected attributes
+into the `<artefact>` tag.
+
+### CI
+
+[`.github/workflows/tra-agent.yml`](../../.github/workflows/tra-agent.yml) runs on
+every pull request that touches `tra-agent/` and on main:
+
+| Job | Gate |
+|---|---|
+| Lint and tests | `ruff`; unit, platform and red-team tests; the golden set on the recording; `pip-audit` |
+| Infrastructure | CDK assertion tests; `bicep build` and `bicep lint` with no errors |
+| Image | amd64 build; Trivy fails on fixable HIGH or CRITICAL; Trivy misconfiguration scan (report only); SPDX SBOM. On main: multi-arch push to GHCR, keyless `cosign` signature and SBOM attestation |
+
+[`.github/workflows/tra-agent-live-eval.yml`](../../.github/workflows/tra-agent-live-eval.yml)
+runs the golden set against live Bedrock models weekly and on demand. Set up:
+
+1. An IAM role in the evaluation account trusting GitHub's OIDC provider for
+   this repository and the `tra-eval` environment only, allowed
+   `bedrock:InvokeModel` on the AU inference profiles and nothing else.
+2. The repository variable `TRA_EVAL_ROLE_ARN`.
+3. The `tra-eval` environment, with required reviewers if you want a person to
+   approve each live run.
+
+Make the `tra-agent` checks required on main in branch protection, and require a
+passing live-eval run on any PR that changes `src/tra_core/agents/prompts/`,
+`config/models.yaml` or `src/tra_core/data/`. A CODEOWNERS entry for those paths
+is the simplest way to enforce the review.
+
+Actions are pinned by commit SHA and Dependabot proposes updates. Check each SHA
+against the publisher's release page when you accept one.
+
+To verify a deployed image came from this pipeline:
+
+```bash
+cosign verify ghcr.io/mor-sec/patterns/tra-agent@sha256:<digest> \
+  --certificate-identity-regexp '^https://github.com/mor-sec/patterns/.github/workflows/tra-agent.yml@refs/heads/main$' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+## 9. Control alignment
 
 | Control objective | How the deployment meets it | References |
 |---|---|---|
@@ -275,11 +366,13 @@ The tests in [tests/platform](../tests/platform) do the following:
 | Tamper-evident audit | Hash chain plus write-once storage (Object Lock compliance mode, locked immutability policy) | ISO 27001 A.8.15; PCI DSS 10.3 |
 | Data residency | Bedrock AU profile (Sydney and Melbourne), Foundry in Australia East, regional GPT only | Design decision D-3 |
 | Network isolation | VPC mode and VNet injection, private endpoints, HTTPS-only egress through a NAT and firewall | ISO 27001 A.8.20 and A.8.22; PCI DSS 1.3 |
-| Classification enforcement | PSPF clearance from Entra app roles; artefacts refused above clearance; PROTECTED refused outright | PSPF; ISM data handling |
+| Classification enforcement | PSPF clearance from Entra app roles; artefacts refused above clearance or with a body marking above their label; PROTECTED refused outright | PSPF; ISM data handling |
+| Secure development and change | Golden-set recall thresholds and red-team tests gate every change; prompts versioned by hash | ISO 27001 A.8.25, A.8.29; ISM software development; PCI DSS 6.2, 6.3 |
+| Supply chain | Dependency audit, image scan, SBOM, keyless signing, SHA-pinned actions | ISO 27001 A.5.21; E8 patch applications; PCI DSS 6.3.2 |
 
 Complete the ISM column in [controls.yaml](../src/tra_core/data/controls.yaml) from the current ISM release before you rely on this table for an assessment.
 
-## 9. Verify before production
+## 10. Verify before production
 
 These items rest on documentation that was thin or missing when this was written.
 
@@ -288,4 +381,5 @@ These items rest on documentation that was thin or missing when this was written
 3. Which GPT models offer regional `Standard` deployments in Australia East. This is still an open question in the design.
 4. Whether `DefaultAzureCredential` inside a hosted agent resolves to the agent identity. The docs say the agent identity calls models and tools, but they do not name the credential chain.
 5. AgentCore inbound JWT authorizer behaviour for Entra v2 tokens with `api://` audiences: run the smoke test with a real token.
-6. The container image has not been built or scanned in CI yet. That is step 4: image build, SBOM, vulnerability scan and signing.
+6. The CI workflows have not run on GitHub yet. Check the first run of each job, in particular Trivy findings in the base image and the arm64 build under QEMU.
+7. The golden expectations for `hr-leave`, `rag-assistant` and `tra-agent-self` were written from the designs, not from a reviewed live run. Run them live and have a practitioner check any misses before treating the thresholds as a release gate.

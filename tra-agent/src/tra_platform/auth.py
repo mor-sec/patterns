@@ -25,7 +25,7 @@ from __future__ import annotations
 import time
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 import jwt
@@ -149,7 +149,7 @@ class ClaimsMapper:
             or self.step_up_amr & set(self._values(claims, "amr"))
         )
         when = claims.get("auth_time") or claims.get("iat")
-        auth_time = datetime.fromtimestamp(int(when), timezone.utc) if stepped_up and when else None
+        auth_time = datetime.fromtimestamp(int(when), UTC) if stepped_up and when else None
         return Principal.human(
             self.subject(claims), *roles, clearance=clearance, strong_auth=stepped_up, auth_time=auth_time
         )

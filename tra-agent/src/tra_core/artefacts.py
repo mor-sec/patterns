@@ -1,7 +1,8 @@
 """Where design artefacts come from: Git checkouts and Confluence.
 
 Every artefact must carry a PSPF label. Unlabelled or over-classified material
-is refused here, before any model sees it.
+is refused here, before any model sees it, and so is material whose body
+carries a higher protective marking than its label.
 
 Labels:
 - Git and local files: a front-matter line `classification: OFFICIAL_SENSITIVE`
@@ -17,7 +18,7 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
-from tra_core.classification import check_accepted
+from tra_core.classification import check_accepted, marking_conflict
 from tra_core.schemas import Artefact, Classification
 
 _LABEL_LINE = re.compile(r"^\s*classification\s*:\s*(.+?)\s*$", re.IGNORECASE)
@@ -33,6 +34,12 @@ class ArtefactSource(Protocol):
 
     def get(self, locator: str) -> Artefact: ...
     def list(self, prefix: str = "") -> list[str]: ...
+
+
+def _check_label(locator: str, text: str, label: Classification) -> None:
+    check_accepted(label)
+    if marking := marking_conflict(text, label):
+        raise ArtefactError(f"{locator} is labelled {label.label} but its text is marked {marking}; fix the label first")
 
 
 def _sha(text: str) -> str:
@@ -86,7 +93,7 @@ class GitArtefactSource:
         path = self._resolve(locator)
         text = path.read_text(encoding="utf-8", errors="replace")
         label = self._label(path, text)
-        check_accepted(label)
+        _check_label(locator, text, label)
         return Artefact(
             source=self.name,
             locator=str(path.relative_to(self.root)),
@@ -150,6 +157,7 @@ class ConfluenceArtefactSource:
         r.raise_for_status()
         page = r.json()
         text = self._to_text(page["body"]["storage"]["value"])
+        _check_label(page_id, text, label)
         return Artefact(
             source=self.name,
             locator=page_id,

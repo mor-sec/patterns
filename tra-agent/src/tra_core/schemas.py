@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Literal
 
@@ -18,7 +18,7 @@ from tra_core.risk import Rating, rate
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 _CLASSIFICATION_ORDER = ["UNOFFICIAL", "OFFICIAL", "OFFICIAL_SENSITIVE", "PROTECTED", "SECRET", "TOP_SECRET"]

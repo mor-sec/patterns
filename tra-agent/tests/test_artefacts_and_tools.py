@@ -3,7 +3,6 @@ import pytest
 from tra_core.artefacts import ArtefactError, GitArtefactSource
 from tra_core.classification import ClassificationError
 from tra_core.mcp_servers import build_artefacts_server, build_reference_server
-from tra_core.reference import Reference
 from tra_core.schemas import Classification
 from tra_core.tools import McpToolClient, ToolError, ToolSet
 

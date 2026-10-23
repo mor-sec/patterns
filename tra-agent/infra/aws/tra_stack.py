@@ -18,18 +18,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aws_cdk import (
-    CfnOutput,
-    Duration,
-    RemovalPolicy,
-    Stack,
-    aws_ec2 as ec2,
-    aws_ecr_assets as ecr_assets,
-    aws_iam as iam,
-    aws_kms as kms,
-    aws_s3 as s3,
-)
+from aws_cdk import CfnOutput, Duration, RemovalPolicy, Stack
 from aws_cdk import aws_bedrockagentcore as agentcore
+from aws_cdk import aws_ec2 as ec2
+from aws_cdk import aws_ecr_assets as ecr_assets
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_kms as kms
+from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
 SPECIALISTS = ["intake", "system_modeller", "threat_analyst", "control_mapper", "risk_assessor", "quality_critic"]

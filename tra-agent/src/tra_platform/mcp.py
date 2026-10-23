@@ -22,7 +22,7 @@ from starlette.applications import Starlette
 from tra_core.identity import Principal
 from tra_core.mcp_servers import build_artefacts_server, build_reference_server
 from tra_core.schemas import Classification
-from tra_core.tools import JSON, McpToolClient, ToolSet
+from tra_core.tools import JSON, McpToolClient, ToolError, ToolSet
 from tra_platform.a2a import DelegationMiddleware
 from tra_platform.auth import DelegationValidator, TokenExchanger
 
@@ -88,8 +88,21 @@ class RoutedMcpToolClient:
         token = await self.exchanger.exchange(self.subject_token, route.audience)
         headers = {"Authorization": f"Bearer {token}"}
         http = self.http_client_factory(headers) if self.http_client_factory else create_mcp_http_client(headers)
-        async with http:
-            return await McpToolClient(streamable_http_client(route.url, http_client=http)).call(name, args)
+        try:
+            async with http:
+                return await McpToolClient(streamable_http_client(route.url, http_client=http)).call(name, args)
+        except BaseExceptionGroup as group:
+            # The MCP client reports transport and auth failures as nested task-group errors.
+            leaf = _first_leaf(group)
+            if isinstance(leaf, ToolError):
+                raise leaf from group
+            raise ToolError(f"{SERVER_FOR_TOOL[name]} MCP server refused {name}: {leaf!r}") from group
+
+
+def _first_leaf(exc: BaseException) -> BaseException:
+    while isinstance(exc, BaseExceptionGroup) and exc.exceptions:
+        exc = exc.exceptions[0]
+    return exc
 
 
 def no_default_clearance() -> Classification:

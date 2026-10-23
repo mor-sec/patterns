@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -72,10 +72,10 @@ def test_g3_needs_fresh_strong_auth():
     gates = GateService(AuditLog(MemoryAuditSink()))
     tra = _tra(stage=Stage.ACCEPTANCE, awaiting_gate=Gate.G3)
     stale = Principal.human("carol", Role.RISK_OWNER, strong_auth=True,
-                            auth_time=datetime.now(timezone.utc) - timedelta(minutes=30))
+                            auth_time=datetime.now(UTC) - timedelta(minutes=30))
     with pytest.raises(GateError, match="MFA"):
         gates.decide(tra, Gate.G3, stale, "approve", "accept")
-    fresh = Principal.human("carol", Role.RISK_OWNER, strong_auth=True, auth_time=datetime.now(timezone.utc))
+    fresh = Principal.human("carol", Role.RISK_OWNER, strong_auth=True, auth_time=datetime.now(UTC))
     assert gates.decide(tra, Gate.G3, fresh, "approve", "accept").passed
 
 

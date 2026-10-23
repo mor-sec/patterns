@@ -63,5 +63,5 @@ async def test_clearance_comes_from_the_token(signer, mcp_servers):
 async def test_mcp_refuses_wrong_caller(signer, mcp_servers):
     user = signer.user_token("alice", ["TRA.Practitioner"], PORTAL_AUDIENCE)
     client = RoutedMcpToolClient(mcp_servers, signer.exchanger("not-allowed"), user)
-    with pytest.raises(Exception):
+    with pytest.raises(ToolError, match="reference MCP server refused threats_get"):
         await client.call("threats_get", {"threat_id": "TL-001"})

@@ -6,7 +6,6 @@ from pathlib import Path
 import aws_cdk as cdk
 import pytest
 from aws_cdk.assertions import Match, Template
-
 from tra_stack import SPECIALISTS, TraAgentStack
 
 CONTEXT = json.loads((Path(__file__).parents[1] / "cdk.json").read_text())["context"]

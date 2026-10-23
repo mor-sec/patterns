@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tra-agent"
-version = "0.2.0"
+version = "0.3.0"
 description = "Threat and risk assessment (TRA) agent: platform-neutral core and AgentCore/Foundry adapters"
 requires-python = ">=3.11"
 dependencies = [
@@ -35,6 +35,7 @@ dev = ["pytest>=8", "pytest-asyncio>=0.24", "tra-agent[agentcore,foundry]"]
 
 [project.scripts]
 tra-agent = "tra_core.cli:main"
+tra-eval = "tra_eval.runner:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -45,3 +46,16 @@ tra_core = ["data/*.yaml", "agents/prompts/*.md"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["infra/aws/cdk.out"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+# E501: the formatter owns line length. UP042: StrEnum changes str() of members.
+ignore = ["E501", "UP042"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E741"]

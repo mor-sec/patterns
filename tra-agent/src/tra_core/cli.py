@@ -18,7 +18,7 @@ import argparse
 import asyncio
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from tra_core.artefacts import ArtefactSource, GitArtefactSource
@@ -42,7 +42,7 @@ def _principal(args: argparse.Namespace) -> Principal:
         *roles,
         clearance=Classification.parse(args.clearance),
         strong_auth=args.strong_auth,
-        auth_time=datetime.now(timezone.utc) if args.strong_auth else None,
+        auth_time=datetime.now(UTC) if args.strong_auth else None,
     )
 
 
