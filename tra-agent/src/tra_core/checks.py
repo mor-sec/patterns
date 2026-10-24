@@ -10,6 +10,7 @@ from tra_core.schemas import TRA, ControlStatus, CritiqueIssue, Stride
 from tra_core.stride import invalid_categories
 
 ATLAS_ID = re.compile(r"^AML\.T\d{4}(\.\d{3})?$")
+ATTACK_ID = re.compile(r"^T\d{4}(\.\d{3})?$")
 
 
 def check_threats(tra: TRA, reference: Reference) -> list[str]:
@@ -31,9 +32,16 @@ def check_threats(tra: TRA, reference: Reference) -> list[str]:
             errors.append(f"{t.id}: STRIDE {','.join(b.value for b in bad)} does not apply to {t.element_id}")
         if t.library_ref and reference.threats.get(t.library_ref) is None:
             errors.append(f"{t.id}: library_ref {t.library_ref} does not exist")
+        for a in t.attack:
+            if not ATTACK_ID.match(a):
+                errors.append(f"{t.id}: {a} is not an ATT&CK technique ID")
+            elif a not in reference.attack:
+                errors.append(f"{t.id}: {a} is not in ATT&CK {reference.attack.version}")
         for a in t.atlas:
             if not ATLAS_ID.match(a):
                 errors.append(f"{t.id}: {a} is not an ATLAS technique ID")
+            elif a not in reference.atlas:
+                errors.append(f"{t.id}: {a} is not in ATLAS {reference.atlas.version}")
     return errors
 
 

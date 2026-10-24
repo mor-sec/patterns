@@ -112,10 +112,20 @@ def render(tra: TRA, reference: Reference) -> str:
 
     if tra.threats:
         w("## 4. Threats\n")
-        w("| ID | Element | STRIDE | ATLAS | Library | Threat |\n|---|---|---|---|---|---|")
+        w("| ID | Element | STRIDE | ATT&CK | ATLAS | Library | Threat |\n|---|---|---|---|---|---|---|")
         for t in tra.threats:
-            w(f"| {t.id} | {t.element_id} | {''.join(s.value for s in t.stride)} | {', '.join(t.atlas)} | {t.library_ref or ''} | {_md(t.statement)} |")
+            w(
+                f"| {t.id} | {t.element_id} | {''.join(s.value for s in t.stride)} | {', '.join(t.attack)} "
+                f"| {', '.join(t.atlas)} | {t.library_ref or ''} | {_md(t.statement)} |"
+            )
         w("")
+        techniques = sorted({a for t in tra.threats for a in t.attack} | {a for t in tra.threats for a in t.atlas})
+        if techniques:
+            w(f"Techniques (ATT&CK {reference.attack.version}, ATLAS {reference.atlas.version}):\n")
+            for a in techniques:
+                index = reference.atlas if a.startswith("AML.") else reference.attack
+                w(f"- {a} {index.name(a)}")
+            w("")
 
     if tra.controls:
         w("## 5. Controls\n")
@@ -156,6 +166,15 @@ def render(tra: TRA, reference: Reference) -> str:
         w("| Gate | Decision | By | Role | When | Rationale |\n|---|---|---|---|---|---|")
         for g in tra.gates:
             w(f"| {g.gate.value} | {g.decision} | {g.by} | {g.role} | {g.at:%Y-%m-%d %H:%M} UTC | {_md(g.rationale)} |")
+        w("")
+
+    cited = sorted({i for c in tra.controls if (cc := reference.controls.get(c.control_id)) for i in cc.ism})
+    if cited:
+        w(f"## Appendix: ISM controls cited (ISM {reference.ism.version})\n")
+        w("| Control | Guideline | Statement |\n|---|---|---|")
+        for i in cited:
+            entry = reference.ism.get(i) or {}
+            w(f"| {i} | {_md(entry.get('guideline', ''))} | {_md(entry.get('statement', 'not in this ISM release'))} |")
         w("")
 
     w(f"\n**{tra.classification.label}**")

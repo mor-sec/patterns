@@ -120,6 +120,7 @@ class ThreatAnalyst(Specialist[ThreatList]):
         table = "| id | name | kind | applicable STRIDE | AI |\n|---|---|---|---|---|\n" + "\n".join(rows)
         library = "\n".join(
             f"- {t['id']} [{','.join(t['stride'])}] {t['title']} (applies to {', '.join(t['applies_to'])}"
+            + (f"; ATT&CK {', '.join(t['attack'])}" if t.get("attack") else "")
             + (f"; ATLAS {', '.join(t['atlas'])}" if t.get("atlas") else "")
             + f"): {t['description']}"
             for t in candidates.values()

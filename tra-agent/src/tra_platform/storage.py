@@ -19,6 +19,8 @@ so two writers can never both claim the same sequence number.
 
 from __future__ import annotations
 
+import os
+import tempfile
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -42,13 +44,22 @@ class LocalObjectStore:
         self.root = root
 
     def put(self, key: str, data: bytes, *, create_only: bool = False, content_type: str = "application/json") -> None:
+        """Writes are atomic, like S3 and Blob: readers never see a partly written object."""
         path = self.root / key
         path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".tmp-")
         try:
-            with path.open("xb" if create_only else "wb") as fh:
+            with os.fdopen(fd, "wb") as fh:
                 fh.write(data)
+            if create_only:
+                os.link(tmp, path)  # fails if the key exists, so the first writer wins
+            else:
+                os.replace(tmp, path)
         except FileExistsError as exc:
             raise AlreadyExists(key) from exc
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
 
     def get(self, key: str) -> bytes:
         path = self.root / key
@@ -60,7 +71,7 @@ class LocalObjectStore:
         base = self.root / prefix
         if not base.exists():
             return []
-        return sorted(str(p.relative_to(self.root)) for p in base.rglob("*") if p.is_file())
+        return sorted(str(p.relative_to(self.root)) for p in base.rglob("*") if p.is_file() and not p.name.startswith(".tmp-"))
 
 
 class S3ObjectStore:

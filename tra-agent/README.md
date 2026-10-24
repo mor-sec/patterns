@@ -1,6 +1,6 @@
 # TRA agent: platform-neutral core
 
-A multi-agent service that drafts threat and risk assessments (TRAs) from design artefacts, for security practitioners to review. It follows ISO/IEC 27005, uses STRIDE per element plus MITRE ATLAS for AI components, rates risk on the [SAR 5x5 matrix](../docs/03-risk-methodology.md) with AUD thresholds, and maps controls to ISO 27001:2022, the ASD Essential Eight (ML2), the ISM and PCI DSS v4.0.1.
+A multi-agent service that drafts threat and risk assessments (TRAs) from design artefacts, for security practitioners to review. It follows ISO/IEC 27005, uses STRIDE per element with MITRE ATT&CK techniques, plus MITRE ATLAS for AI components, rates risk on the [SAR 5x5 matrix](../docs/03-risk-methodology.md) with AUD thresholds, and maps controls to ISO 27001:2022, the ASD Essential Eight (ML2), the ISM and PCI DSS v4.0.1.
 
 The agent drafts; people decide. Every TRA stops at three human gates, and only a human can pass them:
 
@@ -66,7 +66,7 @@ tra_core/
   orchestrator.py   runs stages, calls specialists through an Invoker, stops at gates
   register.py       SAR CSV register (an Eramba writer can replace it)
   report.py         Markdown report and Mermaid DFD
-  data/             threat library and control crosswalk (versioned YAML)
+  data/             threat library, control crosswalk and pinned ATT&CK, ATLAS and ISM indexes (versioned YAML)
 ```
 
 Design choices worth knowing:
@@ -109,8 +109,10 @@ tra-eval --models config/models.yaml --repeat 3   # live Bedrock models
 
 ## Reference data
 
-- [threat_library.yaml](src/tra_core/data/threat_library.yaml): 32 threats across identity, data, application, delivery and AI/agents, with ATLAS IDs and links to SAR delivery-lifecycle IDs.
-- [controls.yaml](src/tra_core/data/controls.yaml): 35 common controls crosswalked to ISO 27001:2022, Essential Eight, PCI DSS v4.0.1. The **ISM column is deliberately empty**: populate it from the current ISM release. The ASD Essentials column is ready for the successor baseline (expected around Q2 2027). Have the control owner verify the mappings before relying on them.
+- [threat_library.yaml](src/tra_core/data/threat_library.yaml): 32 threats across identity, data, application, delivery and AI/agents, with MITRE ATT&CK Enterprise v20.0 technique IDs, MITRE ATLAS v5.6.0 IDs for AI threats, and links to SAR delivery-lifecycle IDs.
+- [controls.yaml](src/tra_core/data/controls.yaml): 36 common controls crosswalked to ISO 27001:2022, Essential Eight, the ISM (September 2026, OFFICIAL: Sensitive baseline) and PCI DSS v4.0.1. The ASD Essentials column is ready for the successor baseline (expected around Q2 2027). Have the control owner verify the mappings before relying on them.
+- `attack.yaml`, `atlas.yaml`, `ism.yaml`: the framework releases the checks validate IDs against. Regenerate them with `scripts/refresh_frameworks.py` ([build guide section 9](docs/build-guide.md#keeping-the-frameworks-current)).
+- [Glossary](docs/glossary.md) of the terms and acronyms used in the design, the code and the reports.
 
 ## Not done yet
 

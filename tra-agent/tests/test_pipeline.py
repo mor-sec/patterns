@@ -117,6 +117,8 @@ async def test_report_and_register(orchestrator, alice, reference):
     md = render(tra, reference)
     assert "```mermaid" in md and "subgraph Z_APP" in md
     assert md.count("OFFICIAL: Sensitive") >= 2
+    assert "| ATT&CK | ATLAS |" in md and "- T1190 Exploit Public-Facing Application" in md
+    assert "## Appendix: ISM controls cited (ISM 2026.09.4)" in md and "| ISM-1504 |" in md
     rows = list(csv.DictReader(io.StringIO(to_csv(tra))))
     assert list(rows[0].keys()) == SAR_COLUMNS
     assert {r["residual_rating"] for r in rows} >= {"Critical", "High", "Medium"}

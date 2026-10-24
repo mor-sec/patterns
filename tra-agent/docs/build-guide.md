@@ -360,17 +360,31 @@ cosign verify ghcr.io/mor-sec/patterns/tra-agent@sha256:<digest> \
 
 | Control objective | How the deployment meets it | References |
 |---|---|---|
-| Authentication between services | Audience-bound delegation tokens per hop, checked by the platform and again in the container | ISM authentication controls; ISO 27001 A.8.5; PCI DSS 8.3 |
-| Least privilege | One role or identity per service; specialists have no data-store access; models limited to AU profiles | ISO 27001 A.8.2; E8 restrict admin privileges; PCI DSS 7.2 |
-| Step-up for risk acceptance | Conditional Access authentication context with phishing-resistant MFA, re-checked within 10 minutes | E8 MFA (ML2); PCI DSS 8.4 |
-| Tamper-evident audit | Hash chain plus write-once storage (Object Lock compliance mode, locked immutability policy) | ISO 27001 A.8.15; PCI DSS 10.3 |
-| Data residency | Bedrock AU profile (Sydney and Melbourne), Foundry in Australia East, regional GPT only | Design decision D-3 |
-| Network isolation | VPC mode and VNet injection, private endpoints, HTTPS-only egress through a NAT and firewall | ISO 27001 A.8.20 and A.8.22; PCI DSS 1.3 |
-| Classification enforcement | PSPF clearance from Entra app roles; artefacts refused above clearance or with a body marking above their label; PROTECTED refused outright | PSPF; ISM data handling |
-| Secure development and change | Golden-set recall thresholds and red-team tests gate every change; prompts versioned by hash | ISO 27001 A.8.25, A.8.29; ISM software development; PCI DSS 6.2, 6.3 |
-| Supply chain | Dependency audit, image scan, SBOM, keyless signing, SHA-pinned actions | ISO 27001 A.5.21; E8 patch applications; PCI DSS 6.3.2 |
+| Authentication between services | Audience-bound delegation tokens per hop, checked by the platform and again in the container | ISM-2141, ISM-2143, ISM-2133; ISO 27001 A.8.5; PCI DSS 8.3 |
+| Least privilege | One role or identity per service; specialists have no data-store access; models limited to AU profiles | ISM-1508; ISO 27001 A.8.2; E8 restrict admin privileges; PCI DSS 7.2 |
+| Step-up for risk acceptance | Conditional Access authentication context with phishing-resistant MFA, re-checked within 10 minutes | ISM-1173, ISM-1504; E8 MFA (ML2); PCI DSS 8.4 |
+| Tamper-evident audit | Hash chain plus write-once storage (Object Lock compliance mode, locked immutability policy) | ISM-1405, ISM-1815, ISM-1988; ISO 27001 A.8.15; PCI DSS 10.3 |
+| Data residency | Bedrock AU profile (Sydney and Melbourne), Foundry in Australia East, regional GPT only | ISM-1572, ISM-2103; design decision D-3 |
+| Network isolation | VPC mode and VNet injection, private endpoints, HTTPS-only egress through a NAT and firewall | ISM-1181, ISM-0628; ISO 27001 A.8.20 and A.8.22; PCI DSS 1.3 |
+| Classification enforcement | PSPF clearance from Entra app roles; artefacts refused above clearance or with a body marking above their label; PROTECTED refused outright | PSPF; ISM-0393, ISM-1268 |
+| Secure development and change | Golden-set recall thresholds and red-team tests gate every change; prompts versioned by hash | ISM-1238, ISM-0402, ISM-2114; ISO 27001 A.8.25, A.8.29; PCI DSS 6.2, 6.3 |
+| Supply chain | Dependency audit, image scan, SBOM, keyless signing, SHA-pinned actions | ISM-2026, ISM-2029, ISM-1730; ISO 27001 A.5.21; E8 patch applications; PCI DSS 6.3.2 |
 
-Complete the ISM column in [controls.yaml](../src/tra_core/data/controls.yaml) from the current ISM release before you rely on this table for an assessment.
+ISM references are to the September 2026 ISM (2026.09.4), OFFICIAL: Sensitive baseline. The agent also meets ISM-1203 (a TRA for each system) for the systems it assesses: that is common control CC-036.
+
+### Keeping the frameworks current
+
+The threat library cites MITRE ATT&CK Enterprise and MITRE ATLAS techniques, and the control catalogue cites ISM controls. The deterministic checks reject any ID that is not in the pinned release, so a model cannot invent one and a renumbered technique is caught. The pinned releases are in `src/tra_core/data/attack.yaml`, `atlas.yaml` and `ism.yaml`, generated from the publishers' own data:
+
+```bash
+curl -LO https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json
+curl -LO https://raw.githubusercontent.com/mitre-atlas/atlas-data/main/dist/ATLAS.yaml
+# ISM: download the OSCAL release from cyber.gov.au and unzip it to ism-oscal/
+python scripts/refresh_frameworks.py --attack enterprise-attack.json --atlas ATLAS.yaml --ism ism-oscal
+pytest tests/test_reference_data.py
+```
+
+Do this when ASD publishes an ISM update (quarterly) and when MITRE publishes an ATT&CK or ATLAS release (about twice a year). If `test_reference_data.py` fails, a technique or control the library cites was retired or renumbered: remap it, have the control owner confirm, then bump the library and catalogue versions. ATT&CK v20, for example, moved Impair Defenses (T1562) to T1685 and T1686. See the [glossary](glossary.md) for the terms used here.
 
 ## 10. Verify before production
 

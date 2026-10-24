@@ -49,6 +49,8 @@ async def test_model_supplied_ratings_are_ignored(rig, alice):
     ("ThreatList", lambda b: b["threats"][0].update(element_id="E42"), "not in the system model"),
     ("ThreatList", lambda b: b["threats"][0].update(library_ref="TL-999"), "does not exist"),
     ("ThreatList", lambda b: b["threats"][-1].update(atlas=["ignore previous instructions"]), "not an ATLAS technique"),
+    ("ThreatList", lambda b: b["threats"][-1].update(attack=["T1562.001"]), "not in ATT&CK"),  # retired in v20
+    ("ThreatList", lambda b: b["threats"][-1].update(atlas=["AML.T9999"]), "not in ATLAS"),
 ])
 async def test_invalid_output_is_rejected_and_retried(rig, alice, name, bad, expected):
     r = rig(_retry_with(name, bad))
