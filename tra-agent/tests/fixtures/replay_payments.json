@@ -599,6 +599,7 @@
       "T-03"
      ],
      "statement": "An external attacker could skim customers' card data via an injected or compromised script on the payment page, leading to mass card compromise, PCI DSS non-compliance and regulator action.",
+     "category": "APP.3",
      "inherent_likelihood": 4,
      "inherent_impact": 5,
      "residual_likelihood": 4,
@@ -623,6 +624,7 @@
       "T-09"
      ],
      "statement": "A customer could obtain other customers' invoice details via prompt injection against the support assistant, leading to a notifiable breach of OFFICIAL: Sensitive data.",
+     "category": "AIM.1",
      "inherent_likelihood": 4,
      "inherent_impact": 4,
      "residual_likelihood": 4,
@@ -651,6 +653,7 @@
       "T-11"
      ],
      "statement": "An external attacker could take over customer accounts via phished or stuffed credentials because MFA is optional, leading to fraudulent payments and exposure of invoice data.",
+     "category": "IAM.1",
      "inherent_likelihood": 4,
      "inherent_impact": 3,
      "residual_likelihood": 4,
@@ -675,6 +678,7 @@
       "T-04"
      ],
      "statement": "A signed-in customer could read other customers' invoices via broken object-level authorisation in the Payments API, leading to exposure of OFFICIAL: Sensitive data.",
+     "category": "APP.2",
      "inherent_likelihood": 3,
      "inherent_impact": 4,
      "residual_likelihood": 3,
@@ -698,6 +702,7 @@
       "T-10"
      ],
      "statement": "An attacker with control-plane access could delete the invoice database, its backups and the logs via the shared workload account, leading to loss of records and inability to investigate.",
+     "category": "INF.4",
      "inherent_likelihood": 3,
      "inherent_impact": 4,
      "residual_likelihood": 3,
@@ -726,6 +731,7 @@
       "T-07"
      ],
      "statement": "An attacker could disrupt payments or intercept internal API traffic via request floods or a VPC foothold, leading to degraded service and limited data exposure.",
+     "category": "RES.1",
      "inherent_likelihood": 3,
      "inherent_impact": 3,
      "residual_likelihood": 2,

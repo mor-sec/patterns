@@ -22,7 +22,7 @@ The SAR checks that operational controls **can** work. For example, it checks th
 |---|---|---|
 | 1 | [Scope, principles and roles](docs/01-scope-and-principles.md) | Why, what, who, and the triggers for a review |
 | 2 | [Review workflow](docs/02-review-workflow.md) | The staged process, entry and exit criteria, and tiering |
-| 3 | [Risk methodology](docs/03-risk-methodology.md) | How risk is rated, treated, accepted and tracked |
+| 3 | [Risk methodology](docs/03-risk-methodology.md) | How risk is categorised, rated, treated, accepted and tracked, including the cyber risk taxonomy |
 | 4 | [Cloud security architecture domains](docs/04-cloud-security-architecture.md) | What "good" looks like in each cloud design domain |
 | 5 | [Delivery lifecycle: IaC → build → configuration](docs/05-delivery-lifecycle.md) | Securing the path from code to running infrastructure |
 

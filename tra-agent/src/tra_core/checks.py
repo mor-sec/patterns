@@ -71,6 +71,8 @@ def check_risks(tra: TRA, reference: Reference) -> list[str]:
         for cite in r.citations:
             if cite not in known:
                 errors.append(f"{r.id}: citation {cite} does not exist")
+        if not reference.taxonomy.exists(r.category):
+            errors.append(f"{r.id}: category {r.category} is not in the risk taxonomy")
         for cid in r.proposed_controls:
             if not reference.controls.exists(cid):
                 errors.append(f"{r.id}: proposed control {cid} is not in the catalogue")
@@ -91,7 +93,7 @@ def check_risks(tra: TRA, reference: Reference) -> list[str]:
     return errors
 
 
-def coverage_issues(tra: TRA) -> list[CritiqueIssue]:
+def coverage_issues(tra: TRA, reference: Reference | None = None) -> list[CritiqueIssue]:
     issues: list[CritiqueIssue] = []
     model = tra.system_model
     if model is None:
@@ -112,10 +114,18 @@ def coverage_issues(tra: TRA) -> list[CritiqueIssue]:
     for c in tra.controls:
         if c.status is ControlStatus.IN_PLACE and "not described" in c.evidence.lower():
             issues.append(CritiqueIssue(severity="major", where=c.control_id, issue="marked in place without evidence", source="check"))
+    if reference is not None and tra.risks:
+        recorded = {r.category.split(".")[0] for r in tra.risks}
+        for cat in reference.taxonomy.categories:
+            if cat.always_consider and cat.id not in recorded:
+                issues.append(CritiqueIssue(
+                    severity="minor", where=cat.id, source="check",
+                    issue=f"no risk recorded for {cat.name}; confirm it was considered and does not apply",
+                ))
     return issues
 
 
 def automated_checks(tra: TRA, reference: Reference) -> list[CritiqueIssue]:
     problems = check_threats(tra, reference) + check_controls(tra, reference) + check_risks(tra, reference)
     blockers = [CritiqueIssue(severity="blocker", where=p.split(":")[0], issue=p, source="check") for p in problems]
-    return blockers + coverage_issues(tra)
+    return blockers + coverage_issues(tra, reference)

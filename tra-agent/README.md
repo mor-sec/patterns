@@ -109,8 +109,9 @@ tra-eval --models config/models.yaml --repeat 3   # live Bedrock models
 
 ## Reference data
 
-- [threat_library.yaml](src/tra_core/data/threat_library.yaml): 32 threats across identity, data, application, delivery and AI/agents, with MITRE ATT&CK Enterprise v20.0 technique IDs, MITRE ATLAS v5.6.0 IDs for AI threats, and links to SAR delivery-lifecycle IDs.
-- [controls.yaml](src/tra_core/data/controls.yaml): 36 common controls crosswalked to ISO 27001:2022, Essential Eight, the ISM (September 2026, OFFICIAL: Sensitive baseline) and PCI DSS v4.0.1. The ASD Essentials column is ready for the successor baseline (expected around Q2 2027). Have the control owner verify the mappings before relying on them.
+- [threat_library.yaml](src/tra_core/data/threat_library.yaml): 40 threats across identity, data, application, delivery, supply chain, FOCI, post-quantum cryptography and AI/agents, each with a default risk category, with MITRE ATT&CK Enterprise v20.0 technique IDs, MITRE ATLAS v5.6.0 IDs for AI threats, and links to SAR delivery-lifecycle IDs.
+- [controls.yaml](src/tra_core/data/controls.yaml): 39 common controls crosswalked to ISO 27001:2022, Essential Eight, the ISM (September 2026, OFFICIAL: Sensitive baseline), PCI DSS v4.0.1 and, where a direction applies, the PSPF. The ASD Essentials column is ready for the successor baseline (expected around Q2 2027). Have the control owner verify the mappings before relying on them.
+- [risk_taxonomy.yaml](src/tra_core/data/risk_taxonomy.yaml): the two-level cyber risk taxonomy every risk is filed under ([risk methodology 3.7](../docs/03-risk-methodology.md#37-cyber-risk-taxonomy)). Software development, supply chain, FOCI and cryptography are always considered: the critic flags a TRA with no risk in one.
 - `attack.yaml`, `atlas.yaml`, `ism.yaml`: the framework releases the checks validate IDs against. Regenerate them with `scripts/refresh_frameworks.py` ([build guide section 9](docs/build-guide.md#keeping-the-frameworks-current)).
 - [Glossary](docs/glossary.md) of the terms and acronyms used in the design, the code and the reports.
 

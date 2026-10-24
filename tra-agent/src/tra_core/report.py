@@ -140,13 +140,24 @@ def render(tra: TRA, reference: Reference) -> str:
     if tra.risks:
         w("## 6. Risks\n")
         risks = sorted(tra.risks, key=lambda r: (_ORDER[r.residual_rating], r.id))
-        w("| Risk | Inherent | Residual | Treatment | Acceptance authority |\n|---|---|---|---|---|")
+        w("| Risk | Category | Inherent | Residual | Treatment | Acceptance authority |\n|---|---|---|---|---|---|")
         for r in risks:
             w(
-                f"| {r.id}: {_md(r.statement)} | {r.inherent_rating.value} (L{r.inherent_likelihood} I{r.inherent_impact}) "
+                f"| {r.id}: {_md(r.statement)} | {reference.taxonomy.label(r.category)} "
+                f"| {r.inherent_rating.value} (L{r.inherent_likelihood} I{r.inherent_impact}) "
                 f"| **{r.residual_rating.value}** (L{r.residual_likelihood} I{r.residual_impact}) | {r.treatment.value} "
                 f"| {AUTHORITY[r.residual_rating].who_may_accept} |"
             )
+        w("")
+        w(f"Risks by category (taxonomy {reference.taxonomy.version}):\n")
+        w("| Category | Risks | Highest residual |\n|---|---|---|")
+        for cat in reference.taxonomy.categories:
+            in_cat = [r for r in risks if r.category.split(".")[0] == cat.id]
+            if in_cat:
+                top = min(in_cat, key=lambda r: _ORDER[r.residual_rating]).residual_rating.value
+                w(f"| {cat.id} {cat.name} | {', '.join(r.id for r in in_cat)} | {top} |")
+            elif cat.always_consider:
+                w(f"| {cat.id} {cat.name} | none recorded | |")
         w("")
         for r in risks:
             w(f"**{r.id} rationale.** {_md(r.rationale)} *Cites: {_md(', '.join(r.citations))}.*")

@@ -161,3 +161,16 @@ def test_cli_fails_when_nothing_ran(tmp_path):
     (tmp_path / "cases").mkdir()
     assert runner.main(["--cases", str(tmp_path / "cases"), "--replay-dir", str(tmp_path), "--out", str(tmp_path / "o"),
                         "--thresholds", str(EVAL / "thresholds.yaml")]) == 1
+
+
+async def test_risk_category_must_match_when_given(drafted, payments):
+    case = payments.model_copy(deep=True)
+    case.expect.risks = [RiskExpectation(element="invoice database", min_residual=Rating.LOW, category=["FOC"])]
+    assert score(drafted, case).risk_recall == 0.0
+    case.expect.risks = [RiskExpectation(element="invoice database", min_residual=Rating.LOW, category=["INF"])]
+    assert score(drafted, case).risk_recall == 1.0
+
+
+async def test_critic_asks_about_always_consider_categories_with_no_risk(drafted):
+    flagged = {i.where for i in drafted.critique.issues if i.source == "check" and "confirm it was considered" in i.issue}
+    assert flagged == {"SDL", "SUP", "FOC", "CRY"}

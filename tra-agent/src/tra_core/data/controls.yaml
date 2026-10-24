@@ -12,12 +12,13 @@
 #                 which scripts/refresh_frameworks.py regenerates from ASD's OSCAL
 #                 release. Re-check the mapping at every quarterly ISM update.
 #   pci_dss:      PCI DSS v4.0.1 requirements
+#   pspf:         PSPF policies and directions, where one sets a specific requirement
 #
 # This is a starter crosswalk: have the control owner verify each mapping
 # before TRAs rely on it. Replace this file with the corporate control catalogue when it is available.
 
 meta:
-  version: "2026.10.1"
+  version: "2026.10.2"
   owner: security-architecture
   review_due: "2027-01-31"
   e8_target_maturity: 2
@@ -27,6 +28,7 @@ meta:
     asd_essentials: "ASD Essentials (expected Q2 2027)"
     ism: "ASD ISM September 2026 (2026.09.4), OFFICIAL: Sensitive baseline"
     pci_dss: "PCI DSS v4.0.1"
+    pspf: "Protective Security Policy Framework, with directions in force"
 
 controls:
   - id: CC-001
@@ -244,3 +246,21 @@ controls:
     iso27001: ["5.8"]
     ism: ["ISM-1203", "ISM-1633", "ISM-1634", "ISM-1636", "ISM-0027", "ISM-0041"]
     pci_dss: ["12.3.1"]
+  - id: CC-037
+    title: Cyber supply chain risk assessment, approved supplier list and integrity checks on acceptance
+    domain: supplier
+    iso27001: ["5.19", "5.20", "5.21", "5.22"]
+    ism: ["ISM-1631", "ISM-1452", "ISM-1567", "ISM-1568", "ISM-1632", "ISM-1882", "ISM-1785", "ISM-1786", "ISM-1787", "ISM-1788", "ISM-1790", "ISM-1791", "ISM-1792"]
+    pci_dss: ["12.8.1", "12.8.2", "12.8.4"]
+  - id: CC-038
+    title: Foreign ownership, control or influence (FOCI) risk assessment for technology vendors and service providers
+    domain: supplier
+    iso27001: ["5.19", "5.20", "5.23"]
+    ism: ["ISM-1452", "ISM-1567", "ISM-1572", "ISM-1451"]
+    pspf: ["Direction 001-2024 (FOCI risk in technology assets)"]
+  - id: CC-039
+    title: Post-quantum cryptography transition plan with a cryptographic inventory
+    domain: data
+    iso27001: ["8.24"]
+    ism: ["ISM-2073", "ISM-1917", "ISM-1995", "ISM-1991", "ISM-1990", "ISM-1996"]
+    pci_dss: ["12.3.3"]
