@@ -192,8 +192,17 @@ class RiskAssessor(Specialist[RiskList]):
 
     async def build_user_message(self, request: SpecialistRequest) -> str:
         p = request.payload
+        taxonomy = self.reference.taxonomy
+        categories = "\n".join(
+            f"- {c.id} {c.name}{' (always consider)' if c.always_consider else ''}: {c.definition}\n"
+            + "\n".join(f"  - {s.id} {s.name}: {s.description}" for s in c.subcategories)
+            for c in taxonomy.categories
+        )
+        defaults = {t.id: t.risk_category for t in self.reference.threats.threats if t.risk_category}
         return (
-            f"{_scales()}\n\nIntake:\n{as_json(p['intake'])}\n\nSystem model:\n{as_json(p['system_model'])}\n\n"
+            f"{_scales()}\n\nRisk taxonomy (version {taxonomy.version}):\n{categories}\n\n"
+            f"Default categories of library threats: {as_json(defaults)}\n\n"
+            f"Intake:\n{as_json(p['intake'])}\n\nSystem model:\n{as_json(p['system_model'])}\n\n"
             f"Threats:\n{as_json(p['threats'])}\n\nControl assessments:\n{as_json(p['controls'])}"
         )
 

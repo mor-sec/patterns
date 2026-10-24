@@ -48,6 +48,7 @@ class ThreatExpectation(BaseModel):
 class RiskExpectation(BaseModel):
     element: str
     min_residual: Rating
+    category: list[str] = Field(default_factory=list, description="Accepted taxonomy categories, LLL or LLL.n")
     why: str = ""
 
 
@@ -161,6 +162,7 @@ def score(tra: TRA, case: GoldenCase) -> Score:
         found = any(
             any(on(r.element, by_id[t].element_id) for t in risk.threat_ids if t in by_id)
             and _RANK[risk.residual_rating] >= _RANK[r.min_residual]
+            and (not r.category or any(risk.category == c or risk.category.split(".")[0] == c for c in r.category))
             for risk in tra.risks
         )
         hits += found

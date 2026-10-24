@@ -119,8 +119,11 @@ async def test_report_and_register(orchestrator, alice, reference):
     assert md.count("OFFICIAL: Sensitive") >= 2
     assert "| ATT&CK | ATLAS |" in md and "- T1190 Exploit Public-Facing Application" in md
     assert "## Appendix: ISM controls cited (ISM 2026.09.4)" in md and "| ISM-1504 |" in md
+    assert "| Risk | Category |" in md and "APP.3 Application and API: Client-side and third-party script" in md
+    assert "| FOC Foreign ownership, control or influence | none recorded | |" in md
     rows = list(csv.DictReader(io.StringIO(to_csv(tra))))
     assert list(rows[0].keys()) == SAR_COLUMNS
+    assert rows[0]["domain"].startswith(("APP.", "AIM.", "IAM.", "INF.", "RES."))
     assert {r["residual_rating"] for r in rows} >= {"Critical", "High", "Medium"}
     dfd = mermaid_dfd(tra.system_model)
     assert "E01 ==>" in dfd  # boundary-crossing flows drawn thick

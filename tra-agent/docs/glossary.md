@@ -56,11 +56,21 @@ by the SAR modifiers (for example internet exposure).
 **Residual risk.** The risk rating after the proposed controls. It can never be
 higher than the inherent rating.
 
+**Risk category.** Where a risk sits in the cyber risk taxonomy, recorded as a
+level 2 ID such as SUP.2. A risk is filed under its root cause, not its
+consequence.
+
 **Risk owner.** The business person accountable for the system's risks, who
 decides at G3.
 
 **Risk register.** The list of risks the TRA records, exported in the SAR CSV
 format for the GRC tool (Eramba).
+
+**Risk taxonomy.** The two-level classification of cyber risks in
+`risk_taxonomy.yaml` and section 3.7 of the risk methodology: 14 level 1
+categories (such as SUP Supply chain) and their level 2 categories.
+*Always consider* categories (software development, supply chain, FOCI and
+cryptography) must be addressed on every TRA.
 
 **Risk treatment.** What is done about a risk, as in ISO 27005: mitigate,
 accept, transfer or avoid.
@@ -100,15 +110,25 @@ The library cites ATT&CK 20.0.
 **Boundary-crossing flow.** A data flow that crosses a trust boundary. It is
 drawn with a thick arrow and must have at least one threat.
 
+**CBOM.** Cryptographic bill of materials: an inventory of where and how a
+system uses cryptography, the starting point for the post-quantum transition.
+
 **Confused deputy.** A service with more authority than its caller is tricked
 into using that authority for the caller, for example by accepting a token
 meant for another service.
+
+**CRQC.** Cryptographically relevant quantum computer: a quantum computer able
+to break RSA and elliptic-curve cryptography.
 
 **DFD.** Data flow diagram: the drawing of the system model, with external
 entities, processes, data stores and data flows grouped into trust zones.
 
 **Element.** A part of the system model: an external entity, a process or a
 data store. Elements have IDs E01, E02 and so on; flows have F01, F02.
+
+**Harvest now, decrypt later.** Recording encrypted traffic or data today to
+decrypt it once a CRQC exists. It makes quantum-vulnerable key exchange a risk
+now for data whose confidentiality must outlast the early 2030s.
 
 **Library threat.** An entry in `threat_library.yaml` (TL-001 onwards): a
 reusable threat with its STRIDE categories, ATT&CK and ATLAS techniques and the
@@ -144,6 +164,12 @@ around Q2 2027. The control catalogue has an empty column ready for it.
 as multi-factor authentication and restricting administrative privileges,
 assessed at maturity levels 0 to 3. The target here is Maturity Level 2 (ML2).
 
+**FOCI.** Foreign ownership, control or influence: "the ability for vendors
+to be directed by a foreign government", through direct ownership, the laws of
+the vendor's home jurisdiction or outside pressure (Home Affairs). PSPF
+Direction 001-2024 requires Commonwealth entities to manage FOCI risk in
+technology procurement and maintenance.
+
 **ISM.** ASD's Information Security Manual: a set of security controls with IDs
 such as ISM-1504, published quarterly. Each control applies to some
 classifications. The catalogue cites the September 2026 release (2026.09.4) and
@@ -157,6 +183,17 @@ authentication).
 management that the TRA process follows: establish context, identify, analyse
 and evaluate risk, treat it, then accept and monitor.
 
+**ML-KEM and ML-DSA.** The NIST post-quantum algorithms for key
+encapsulation (FIPS 203) and digital signatures (FIPS 204). The ISM requires
+new cryptographic equipment and software to support ML-KEM-1024 and ML-DSA-87
+by 2030.
+
+**NIST SP 800-161.** NIST's guidance on cybersecurity supply chain risk
+management (C-SCRM), Revision 1, Update 1 (2024).
+
+**NIST SSDF.** The Secure Software Development Framework, NIST SP 800-218:
+practices for producing secure software. Version 1.2 was in draft in 2026.
+
 **OSCAL.** Open Security Controls Assessment Language: the machine-readable
 format ASD publishes the ISM in. `scripts/refresh_frameworks.py` reads it.
 
@@ -166,6 +203,10 @@ tests are organised by it.
 
 **PCI DSS.** Payment Card Industry Data Security Standard, version 4.0.1, which
 applies to any system that stores, processes or transmits cardholder data.
+
+**PQC.** Post-quantum cryptography: algorithms believed secure against
+quantum computers. ASD recommends ceasing traditional asymmetric cryptography
+(RSA, DH, ECDH, ECDSA) by the end of 2030.
 
 **PSPF.** Protective Security Policy Framework: the Australian Government
 policy that defines the security classifications.

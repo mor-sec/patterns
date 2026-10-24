@@ -221,6 +221,7 @@ class Risk(BaseModel):
     id: str = Field(pattern=r"^R-\d{2,3}$")
     threat_ids: list[str] = Field(min_length=1)
     statement: str = Field(description="[actor] could [action] via [weakness], leading to [impact]")
+    category: str = Field(pattern=r"^[A-Z]{3}\.\d$", description="Risk taxonomy category of the root cause, such as SUP.2")
     inherent_likelihood: int = Field(ge=1, le=5)
     inherent_impact: int = Field(ge=1, le=5)
     residual_likelihood: int = Field(ge=1, le=5)

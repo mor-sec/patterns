@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import csv
 import io
+from functools import cache
 from pathlib import Path
 from typing import Protocol
 
+from tra_core.reference import RiskTaxonomy
 from tra_core.risk import AUTHORITY
 from tra_core.schemas import TRA
 
@@ -25,7 +27,13 @@ class RegisterWriter(Protocol):
         ...
 
 
-def register_rows(tra: TRA) -> list[dict[str, str]]:
+@cache
+def _default_taxonomy() -> RiskTaxonomy:
+    return RiskTaxonomy()
+
+
+def register_rows(tra: TRA, taxonomy: RiskTaxonomy | None = None) -> list[dict[str, str]]:
+    taxonomy = taxonomy or _default_taxonomy()
     rows = []
     for r in tra.risks:
         authority = AUTHORITY[r.residual_rating]
@@ -33,7 +41,7 @@ def register_rows(tra: TRA) -> list[dict[str, str]]:
             "risk_id": f"{tra.id}/{r.id}",
             "sar_ref": tra.id,
             "finding": r.statement.split(",")[0][:120],
-            "domain": "",
+            "domain": taxonomy.label(r.category),
             "risk_statement": r.statement,
             "threat_ids": ";".join(r.threat_ids),
             "inherent_likelihood": str(r.inherent_likelihood),

@@ -1,4 +1,4 @@
-"""Versioned reference data: the threat library, the control crosswalk and the framework indexes."""
+"""Versioned reference data: the threat library, the control crosswalk, the risk taxonomy and the framework indexes."""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ class LibraryThreat(BaseModel):
     attack: list[str] = Field(default_factory=list)
     atlas: list[str] = Field(default_factory=list)
     sar_ref: list[str] = Field(default_factory=list)
+    risk_category: str | None = Field(default=None, description="Default risk taxonomy category")
     description: str
     controls: list[str] = Field(default_factory=list)
 
@@ -35,6 +36,7 @@ class CommonControl(BaseModel):
     asd_essentials: list[str] = Field(default_factory=list)
     ism: list[str] = Field(default_factory=list)
     pci_dss: list[str] = Field(default_factory=list)
+    pspf: list[str] = Field(default_factory=list)
 
     def references(self) -> dict[str, list[str]]:
         return {
@@ -45,6 +47,7 @@ class CommonControl(BaseModel):
                 "ASD Essentials": self.asd_essentials,
                 "ISM": self.ism,
                 "PCI DSS": self.pci_dss,
+                "PSPF": self.pspf,
             }.items()
             if v
         }
@@ -111,6 +114,46 @@ class ControlCatalogue:
         return [self._by_id[i] for i in ids if i in self._by_id]
 
 
+class RiskSubcategory(BaseModel):
+    id: str = Field(pattern=r"^[A-Z]{3}\.\d$")
+    name: str
+    description: str
+
+
+class RiskCategory(BaseModel):
+    id: str = Field(pattern=r"^[A-Z]{3}$")
+    name: str
+    definition: str
+    always_consider: bool = False
+    subcategories: list[RiskSubcategory]
+
+
+class RiskTaxonomy:
+    """Two-level cyber risk taxonomy. Risks are recorded against a level 2 ID (LLL.n)."""
+
+    def __init__(self, path: Path | None = None) -> None:
+        raw = _load_yaml("risk_taxonomy.yaml", path)
+        self.meta: dict[str, Any] = raw.get("meta", {})
+        self.categories = [RiskCategory.model_validate(c) for c in raw["categories"]]
+        self._sub = {s.id: (c, s) for c in self.categories for s in c.subcategories}
+
+    @property
+    def version(self) -> str:
+        return str(self.meta.get("version", "unversioned"))
+
+    def exists(self, category_id: str) -> bool:
+        return category_id in self._sub
+
+    def parent(self, category_id: str) -> RiskCategory | None:
+        hit = self._sub.get(category_id)
+        return hit[0] if hit else None
+
+    def label(self, category_id: str) -> str:
+        """`SUP.2 Supply chain: Service provider compromise`, or the bare ID if unknown."""
+        hit = self._sub.get(category_id)
+        return f"{category_id} {hit[0].name}: {hit[1].name}" if hit else category_id
+
+
 class FrameworkIndex:
     """IDs and names from one external framework release (ATT&CK, ATLAS or the ISM).
 
@@ -150,6 +193,10 @@ class Reference:
     @cached_property
     def controls(self) -> ControlCatalogue:
         return ControlCatalogue(self._controls_path)
+
+    @cached_property
+    def taxonomy(self) -> RiskTaxonomy:
+        return RiskTaxonomy()
 
     @cached_property
     def attack(self) -> FrameworkIndex:

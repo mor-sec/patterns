@@ -45,6 +45,7 @@ async def test_model_supplied_ratings_are_ignored(rig, alice):
     ("RiskList", lambda b: b["risks"][0].update(residual_impact=5, inherent_impact=2), "residual scores exceed inherent"),
     ("RiskList", lambda b: b["risks"][0].update(threat_ids=["T-99"]), "threat T-99 does not exist"),
     ("RiskList", lambda b: b["risks"][0].update(citations=["E99"]), "citation E99 does not exist"),
+    ("RiskList", lambda b: b["risks"][0].update(category="ZZZ.9"), "not in the risk taxonomy"),
     ("RiskList", lambda b: b["risks"][0].update(proposed_controls=["CTRL-NOPE"]), "not in the catalogue"),
     ("ThreatList", lambda b: b["threats"][0].update(element_id="E42"), "not in the system model"),
     ("ThreatList", lambda b: b["threats"][0].update(library_ref="TL-999"), "does not exist"),
