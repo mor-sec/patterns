@@ -197,6 +197,7 @@ class Threat(BaseModel):
     id: str = Field(pattern=r"^T-\d{2,3}$")
     element_id: str = Field(description="Element (E..) or flow (F..) the threat applies to")
     stride: list[Stride] = Field(min_length=1)
+    attack: list[str] = Field(default_factory=list, description="MITRE ATT&CK Enterprise technique IDs, T.... or T....nnn")
     atlas: list[str] = Field(default_factory=list, description="MITRE ATLAS technique IDs, AML.T....")
     library_ref: str | None = Field(default=None, description="Threat library ID this came from, if any")
     statement: str

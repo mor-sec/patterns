@@ -40,6 +40,7 @@ class ThreatExpectation(BaseModel):
     element: str
     stride: list[Stride] = Field(min_length=1)
     library: list[str] = Field(default_factory=list)
+    attack: list[str] = Field(default_factory=list)
     atlas: list[str] = Field(default_factory=list)
     why: str = ""
 
@@ -144,6 +145,7 @@ def score(tra: TRA, case: GoldenCase) -> Score:
             on(t.element, th.element_id)
             and set(th.stride) & set(t.stride)
             and (not t.library or th.library_ref in t.library)
+            and (not t.attack or set(th.attack) & set(t.attack))
             and (not t.atlas or set(th.atlas) & set(t.atlas))
             for th in tra.threats
         )

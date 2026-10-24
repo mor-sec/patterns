@@ -333,6 +333,12 @@
      "stride": [
       "S"
      ],
+     "attack": [
+      "T1566",
+      "T1078",
+      "T1110.004",
+      "T1621"
+     ],
      "atlas": [],
      "library_ref": "TL-001",
      "statement": "An attacker takes over customer accounts with phished or reused passwords because MFA is optional.",
@@ -343,6 +349,10 @@
      "element_id": "F02",
      "stride": [
       "D"
+     ],
+     "attack": [
+      "T1499.003",
+      "T1498"
      ],
      "atlas": [],
      "library_ref": "TL-022",
@@ -356,6 +366,11 @@
       "T",
       "I"
      ],
+     "attack": [
+      "T1059.007",
+      "T1056.003",
+      "T1195.001"
+     ],
      "atlas": [],
      "library_ref": "TL-023",
      "statement": "A compromised third-party or injected script on the payment page skims card data before it reaches the hosted fields.",
@@ -367,6 +382,9 @@
      "stride": [
       "I",
       "E"
+     ],
+     "attack": [
+      "T1190"
      ],
      "atlas": [],
      "library_ref": "TL-021",
@@ -380,6 +398,10 @@
       "T",
       "I"
      ],
+     "attack": [
+      "T1557",
+      "T1040"
+     ],
      "atlas": [],
      "library_ref": "TL-011",
      "statement": "An attacker with a foothold in the VPC reads or alters API traffic sent over plain HTTP between the ALB and ECS.",
@@ -392,6 +414,11 @@
       "T",
       "D"
      ],
+     "attack": [
+      "T1486",
+      "T1490",
+      "T1485"
+     ],
      "atlas": [],
      "library_ref": "TL-014",
      "statement": "An attacker with control-plane access deletes the database and its same-account backups.",
@@ -402,6 +429,11 @@
      "element_id": "E03",
      "stride": [
       "S"
+     ],
+     "attack": [
+      "T1552.001",
+      "T1078.004",
+      "T1555.006"
      ],
      "atlas": [],
      "library_ref": "TL-002",
@@ -442,6 +474,10 @@
       "R",
       "T"
      ],
+     "attack": [
+      "T1685.002",
+      "T1070"
+     ],
      "atlas": [],
      "library_ref": "TL-035",
      "statement": "An attacker deletes or edits CloudWatch logs in the same account to hide activity.",
@@ -452,6 +488,12 @@
      "element_id": "E07",
      "stride": [
       "S"
+     ],
+     "attack": [
+      "T1566",
+      "T1078",
+      "T1110.004",
+      "T1621"
      ],
      "atlas": [],
      "library_ref": "TL-001",

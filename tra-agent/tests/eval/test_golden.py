@@ -67,11 +67,12 @@ async def test_missing_threat_fails_the_gate(drafted, payments):
     assert s.misses[0].kind == "threat" and s.misses[0].why == "no reconciliation"
 
 
-async def test_library_and_atlas_must_match_when_given(drafted, payments):
+async def test_library_and_techniques_must_match_when_given(drafted, payments):
     case = payments.model_copy(deep=True)
     case.expect.threats = [
         ThreatExpectation(element="web front end", stride=[Stride.T], library=["TL-020"]),  # wrong library entry
         ThreatExpectation(element="support assistant", stride=[Stride.I], atlas=["AML.T0024"]),  # wrong technique
+        ThreatExpectation(element="web front end", stride=[Stride.T], attack=["T1486"]),  # wrong technique
     ]
     assert score(drafted, case).threat_recall == 0.0
 
